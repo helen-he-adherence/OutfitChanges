@@ -7,14 +7,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
-import com.google.android.material.textfield.TextInputEditText;
+import android.widget.EditText;
 import com.example.outfitchanges.MainActivity;
 import com.example.outfitchanges.R;
 
 public class LoginActivity extends AppCompatActivity {
 
-    private TextInputEditText emailEditText;
-    private TextInputEditText passwordEditText;
+    private EditText emailEditText;
+    private EditText passwordEditText;
     private AuthViewModel authViewModel;
 
     @Override
@@ -34,6 +34,12 @@ public class LoginActivity extends AppCompatActivity {
 
         registerText.setOnClickListener(v -> {
             Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
+            startActivity(intent);
+        });
+
+        // 找回密码文本点击事件
+        findViewById(R.id.forgot_password_text).setOnClickListener(v -> {
+            Intent intent = new Intent(LoginActivity.this, ForgetPasswordActivity.class);
             startActivity(intent);
         });
 

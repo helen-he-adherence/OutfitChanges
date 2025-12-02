@@ -10,8 +10,7 @@
 
     <!-- 自定义颜色 -->
     <color name="warm_pink">#FF1493</color>
-
-    <color name="primary_color">#FF6B8E</color>
+    <color name="primary_color">#FF1493</color>
     <color name="secondary_color">#4ECDC4</color>
     <color name="accent_color">#FFD166</color>
     <color name="background_color">#F5F5F5</color>
