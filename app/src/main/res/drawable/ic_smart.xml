@@ -1,4 +1,41 @@
-<?xml version="1.0" encoding="utf-8"?>
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
+<!-- res/drawable/ic_sparkles.xml -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
 
-</selector>
+    <!-- Main star (filled) -->
+    <path
+        android:fillColor="#9CA3AF"
+        android:pathData="M11.017,2.814a1,1 0,0,1 1.966,0l1.051,5.558a2,2 0,0,0 1.594,1.594l5.558,1.051a1,1 0,0,1 0,1.966l-5.558,1.051a2,2 0,0,0 -1.594,1.594l-1.051,5.558a1,1 0,0,1 -1.966,0l-1.051,-5.558a2,2 0,0,0 -1.594,-1.594l-5.558,-1.051a1,1 0,0,1 0,-1.966l5.558,-1.051a2,2 0,0,0 1.594,-1.594z" />
+
+    <!-- Top-right "+" vertical bar (simulated as thin rectangle) -->
+    <path
+        android:fillColor="#9CA3AF"
+        android:pathData="M19,2 L21,2 L21,6 L19,6 Z" />
+
+    <!-- Top-right "+" horizontal bar -->
+    <path
+        android:fillColor="#9CA3AF"
+        android:pathData="M18,4 L22,4 L22,6 L18,6 Z" />
+
+    <!-- Bottom-left circle -->
+    <path
+        android:fillColor="#9CA3AF"
+        android:pathData="M4,20 a2,2 0,1,1 0,0.001 Z" />
+    <!-- Using arc to create a filled circle (since <circle> not always supported in older APIs, but actually it is. Alternative below.) -->
+
+    <!-- OR simply use <group> + <circle> if targeting API 21+ (recommended): -->
+    <!--
+    <group>
+        <clip-path android:pathData="M0,0H24V24H0Z"/>
+        <circle
+            android:cx="4"
+            android:cy="20"
+            android:r="2"
+            android:fillColor="#9CA3AF" />
+    </group>
+    -->
+
+</vector>

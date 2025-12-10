@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 底部导航栏文字样式 - 选中状态 -->
+    <style name="BottomNavTextActive">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:paddingTop">6dp</item>
+    </style>
+    
+    <!-- 底部导航栏文字样式 - 未选中状态 -->
+    <style name="BottomNavTextInactive">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:paddingTop">6dp</item>
+    </style>
+</resources>

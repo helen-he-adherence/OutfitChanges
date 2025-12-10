@@ -40,6 +40,11 @@
         android:layout_height="wrap_content"
         android:background="@color/white"
         app:elevation="8dp"
+        app:itemIconSize="28dp"
+        app:itemHorizontalTranslationEnabled="false"
+        app:itemTextAppearanceActive="@style/BottomNavTextActive"
+        app:itemTextAppearanceInactive="@style/BottomNavTextInactive"
+        app:labelVisibilityMode="labeled"
         app:menu="@menu/bottom_nav_menu" />
 
 </LinearLayout>

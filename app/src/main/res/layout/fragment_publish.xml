@@ -11,11 +11,8 @@
         android:id="@+id/publish_button"
         android:layout_width="200dp"
         android:layout_height="200dp"
-        android:background="@drawable/ic_publish_bg"
-        android:gravity="center"
-        android:text="+"
-        android:textColor="@color/white"
-        android:textSize="48sp" />
+        android:background="@drawable/ic_publish_add"
+        android:gravity="center" />
 
     <TextView
         android:layout_width="wrap_content"
