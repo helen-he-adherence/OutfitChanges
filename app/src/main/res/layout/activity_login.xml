@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white"
@@ -101,6 +102,20 @@
             android:textSize="18sp"
             android:textStyle="bold"
             android:background="@drawable/rounded_button_bg"
+            android:layout_marginBottom="16dp" />
+
+        <!-- 游客登录按钮 -->
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/guest_login_button"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="游客登录"
+            android:textColor="@color/black"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:background="@drawable/rounded_button_bg_guest"
+            android:backgroundTint="@null"
+            android:stateListAnimator="@null"
             android:layout_marginBottom="16dp" />
 
         <!-- 协议同意 -->
