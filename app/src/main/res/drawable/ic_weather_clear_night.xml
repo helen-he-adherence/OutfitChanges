@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- 月亮 -->
+    <path
+        android:fillColor="#FBBF24"
+        android:pathData="M16,3A7.5,7.5 0 0,0 8,10.5A7.5,7.5 0 0,0 15.5,18c1.14,0 2.22,-0.26 3.18,-0.72a0.5,0.5 0 0,0 0.02,-0.89A5.51,5.51 0 0,1 16,12.5c0,-2.69 1.9,-4.94 4.41,-5.56a0.5,0.5 0 0,0 0.03,-0.95A7.52,7.52 0 0,0 15.5,3Z" />
+
+    <!-- 星星 -->
+    <path
+        android:fillColor="#FBBF24"
+        android:pathData="M6.5,6.25l0.4,0.82 0.9,0.13 -0.65,0.64 0.15,0.9 -0.8,-0.42 -0.8,0.42 0.15,-0.9 -0.65,-0.64 0.9,-0.13z" />
+    <path
+        android:fillColor="#FBBF24"
+        android:pathData="M4.5,11.5l0.32,0.65 0.72,0.1 -0.52,0.51 0.12,0.72 -0.64,-0.34 -0.64,0.34 0.12,-0.72 -0.52,-0.51 0.72,-0.1z" />
+</vector>

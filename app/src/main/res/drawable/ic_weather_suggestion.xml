@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- 顶部风线条（右侧螺旋） -->
+    <path
+        android:pathData="M12.8 19.6A2 2 0 1 0 14 16H2"
+        android:strokeWidth="2"
+        android:strokeColor="#EC4899"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000"/>
+
+    <!-- 中间风线条（中间螺旋） -->
+    <path
+        android:pathData="M17.5 8a2.5 2.5 0 1 1 2 4H2"
+        android:strokeWidth="2"
+        android:strokeColor="#EC4899"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000"/>
+
+    <!-- 底部风线条（左侧螺旋） -->
+    <path
+        android:pathData="M9.8 4.4A2 2 0 1 1 11 8H2"
+        android:strokeWidth="2"
+        android:strokeColor="#EC4899"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000"/>
+</vector>

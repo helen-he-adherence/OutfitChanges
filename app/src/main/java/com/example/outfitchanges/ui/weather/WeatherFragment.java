@@ -475,6 +475,15 @@ public class WeatherFragment extends Fragment {
         if (imageView == null || iconCode == null || getContext() == null) {
             return;
         }
+
+        // 优先使用本地图标，避免网络闪烁与统一图标问题
+        int localIconRes = getLocalIconRes(iconCode);
+        if (localIconRes != 0) {
+            imageView.setImageResource(localIconRes);
+            return;
+        }
+
+        // 如果未覆盖到该编码，回退到官方图标链接
         String iconUrl = "https://cdn.heweather.com/cond_icon/" + iconCode + ".png";
         try {
             Glide.with(this)
@@ -485,6 +494,46 @@ public class WeatherFragment extends Fragment {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * 和风天气 icon 编码到本地图标的映射。
+     * 只要匹配到本地资源就直接返回，未覆盖的编码回退网络图标。
+     */
+    private int getLocalIconRes(String iconCode) {
+        try {
+            int code = Integer.parseInt(iconCode);
+            // 白天晴
+            if (code == 100) return R.drawable.ic_weather_sunny_day;
+            // 夜间晴
+            if (code == 150) return R.drawable.ic_weather_clear_night;
+            // 多云
+            if (code == 101 || code == 102 || code == 103 || code == 151 || code == 152 || code == 153) {
+                return R.drawable.ic_weather_cloudy_day;
+            }
+            // 阴
+            if (code == 104 || code == 154) return R.drawable.ic_weather_overcast_day;
+            // 雷阵雨
+            if (code == 302 || code == 303 || code == 304) return R.drawable.ic_weather_thunderstorm_day;
+            // 雨
+            if (code == 300 || code == 301 || code == 305 || code == 306 || code == 309 || code == 399) {
+                return R.drawable.ic_weather_rainy_day;
+            }
+            // 大到暴雨
+            if (code == 307 || code == 308 || code == 310 || code == 311 || code == 312 || code == 313
+                    || code == 314 || code == 315 || code == 316 || code == 317 || code == 318) {
+                return R.drawable.ic_weather_heavy_rainy_day;
+            }
+            // 雪
+            if (code == 400 || code == 401 || code == 402 || code == 403 || code == 404 || code == 405
+                    || code == 406 || code == 407 || code == 408 || code == 409 || code == 410 || code == 499) {
+                return R.drawable.ic_weather_snow_day;
+            }
+            // 夜间多云优先夜色图标
+            if (code == 151 || code == 152 || code == 153) return R.drawable.ic_weather_cloudy_night;
+        } catch (NumberFormatException ignored) {
+        }
+        return 0;
     }
 
     private void updateDressingAdvice() {
