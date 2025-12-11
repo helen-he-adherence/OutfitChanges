@@ -17,4 +17,7 @@
     <color name="text_primary">#333333</color>
     <color name="text_secondary">#666666</color>
     <color name="gray_button_bg">#E0E0E0</color>
+    <color name="pink_bg">#FFE0E6</color>
+    <color name="card_bg">#FFFFFF</color>
+    <color name="overlay_gray">#80000000</color>
 </resources>
