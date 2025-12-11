@@ -12,78 +12,92 @@
         android:padding="16dp">
 
         <!-- 第一部分：当前位置和当前天气 -->
-        <RelativeLayout
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:orientation="vertical"
             android:padding="16dp"
-            android:background="@drawable/rounded_card_bg"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="16dp"
+            android:gravity="center_horizontal">
 
-            <Button
-                android:id="@+id/btn_change_city"
-                android:layout_width="wrap_content"
+            <!-- 第一行：切换城市按钮 -->
+            <RelativeLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:text="切换城市"
-                android:textColor="@android:color/white"
-                android:background="@drawable/rounded_button_bg"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp"
-                android:textSize="14sp" />
+                android:layout_marginBottom="16dp">
 
-            <LinearLayout
-                android:id="@+id/location_container"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_alignParentStart="true"
-                android:layout_alignParentTop="true"
-                android:layout_marginTop="8dp">
-
-                <ImageView
-                    android:id="@+id/ic_location"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_location"
-                    android:tint="@color/text_primary" />
-
+                <!-- 切换城市按钮放在最右边 -->
                 <TextView
-                    android:id="@+id/tv_location"
+                    android:id="@+id/btn_change_city"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="钱塘区"
-                    android:textSize="16sp"
+                    android:layout_alignParentEnd="true"
+                    android:background="@android:color/transparent"
+                    android:paddingStart="8dp"
+                    android:paddingTop="4dp"
+                    android:paddingEnd="8dp"
+                    android:paddingBottom="4dp"
+                    android:text="切换城市"
+                    android:textColor="@color/primary_color"
+                    android:textSize="16sp" />
+            </RelativeLayout>
+
+            <!-- 第二行：位置信息和天气 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center_horizontal">
+
+                <!-- 位置信息 -->
+                <LinearLayout
+                    android:id="@+id/location_container"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="16dp">
+
+                    <ImageView
+                        android:id="@+id/ic_location"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_location"
+                        android:tint="@color/text_primary" />
+
+                    <TextView
+                        android:id="@+id/tv_location"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="钱塘区"
+                        android:textSize="16sp"
+                        android:textColor="@color/text_primary"
+                        android:layout_marginStart="8dp" />
+                </LinearLayout>
+
+                <!-- 温度 -->
+                <TextView
+                    android:id="@+id/tv_current_temp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="25°C"
+                    android:textSize="48sp"
                     android:textColor="@color/text_primary"
-                    android:layout_marginStart="8dp" />
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <!-- 天气描述 -->
+                <TextView
+                    android:id="@+id/tv_current_weather"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="多云"
+                    android:textSize="18sp"
+                    android:textColor="@color/text_secondary" />
             </LinearLayout>
+        </LinearLayout>
 
-            <TextView
-                android:id="@+id/tv_current_temp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="25°C"
-                android:textSize="48sp"
-                android:textColor="@color/text_primary"
-                android:textStyle="bold"
-                android:layout_below="@id/location_container"
-                android:layout_alignParentStart="true"
-                android:layout_marginTop="16dp" />
-
-            <TextView
-                android:id="@+id/tv_current_weather"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="多云"
-                android:textSize="18sp"
-                android:textColor="@color/text_secondary"
-                android:layout_below="@id/tv_current_temp"
-                android:layout_alignParentStart="true"
-                android:layout_marginTop="8dp" />
-        </RelativeLayout>
-
+        <!-- 其他部分保持不变 -->
         <!-- 第二部分：24小时天气预报 -->
         <LinearLayout
             android:layout_width="match_parent"

@@ -9,7 +9,6 @@ import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -46,7 +45,7 @@ public class WeatherFragment extends Fragment {
     private TextView tvCurrentTemp;
     private TextView tvCurrentWeather;
     private TextView tvDressingAdvice;
-    private Button btnChangeCity;
+    private TextView btnChangeCity;
     private LinearLayout hourlyContainer;
     private LinearLayout dailyContainer;
     private View overlayView;
