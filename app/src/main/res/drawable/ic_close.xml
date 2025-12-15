@@ -1,16 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
-
-    <!-- 阴天云层 -->
     <path
-        android:fillColor="#9E9E9E"
-        android:pathData="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
+        android:fillColor="#333333"
+        android:pathData="M18.3,5.71L12,12l6.29,6.29-1.41,1.41L10.59,13.41 4.29,19.71 2.88,18.3 9.17,12 2.88,5.71 4.29,4.29 10.59,10.59 16.89,4.29z" />
 </vector>
-
-
-
 
