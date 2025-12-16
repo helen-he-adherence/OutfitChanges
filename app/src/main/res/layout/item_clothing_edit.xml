@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="16dp"
+    app:cardBackgroundColor="@color/card_bg"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <!-- 第一行：单品名称（可编辑输入框） -->
+        <EditText
+            android:id="@+id/edit_item_category"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="单品名称（如：上衣）"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_secondary"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:background="@drawable/rounded_edittext_bg"
+            android:padding="12dp" />
+
+        <!-- 第二行：单品特点（小标签） -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="特点"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp" />
+
+        <LinearLayout
+            android:id="@+id/layout_item_features"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:orientation="horizontal">
+
+            <HorizontalScrollView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/chip_container_features"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+
+            </HorizontalScrollView>
+
+            <Button
+                android:id="@+id/btn_add_feature"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@color/card_bg"
+                android:drawableStart="@android:drawable/ic_input_add"
+                android:drawablePadding="4dp"
+                android:minHeight="32dp"
+                android:text="添加"
+                android:textColor="@color/text_primary"
+                android:textSize="12sp"
+                android:textAllCaps="false" />
+
+        </LinearLayout>
+
+        <!-- 第三行：细节输入框 -->
+        <EditText
+            android:id="@+id/edit_item_details"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="完善细节（可选）"
+            android:inputType="textMultiLine"
+            android:minLines="2"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_secondary"
+            android:textSize="14sp"
+            android:background="@drawable/rounded_edittext_bg"
+            android:padding="12dp" />
+
+        <!-- 删除按钮 -->
+        <Button
+            android:id="@+id/btn_delete_item"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginTop="8dp"
+            android:backgroundTint="@android:color/transparent"
+            android:text="删除此单品"
+            android:textColor="@android:color/holo_red_dark"
+            android:textSize="12sp"
+            android:textAllCaps="false" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>
+

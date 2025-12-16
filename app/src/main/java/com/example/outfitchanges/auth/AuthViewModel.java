@@ -13,16 +13,16 @@ public class AuthViewModel extends ViewModel {
     private MutableLiveData<String> errorMessage = new MutableLiveData<>();
 
     // 登录方法
-    // 登录方法 (宽松调试版)
     public void login(String email, String password) {
-        // 只要密码不为空（或长度大于0），就允许登录
-        if (password != null && password.length() > 0) {
+        // 简单的登录验证：账号为admin，密码为admin
+        if (email != null && email.trim().equalsIgnoreCase("admin") 
+            && password != null && password.equals("admin")) {
             // 登录成功
             currentUser.setValue(email);
             isLoggedIn.setValue(true);
             errorMessage.setValue(null);
         } else {
-            errorMessage.setValue("密码不能为空");
+            errorMessage.setValue("账号或密码错误");
         }
     }
 

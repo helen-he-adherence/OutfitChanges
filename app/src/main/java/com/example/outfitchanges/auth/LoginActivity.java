@@ -15,6 +15,7 @@ import androidx.lifecycle.ViewModelProvider;
 import android.widget.EditText;
 import com.example.outfitchanges.MainActivity;
 import com.example.outfitchanges.R;
+import com.example.outfitchanges.utils.SharedPrefManager;
 import com.google.android.material.button.MaterialButton;
 
 public class LoginActivity extends AppCompatActivity {
@@ -89,7 +90,13 @@ public class LoginActivity extends AppCompatActivity {
         // 观察登录状态
         authViewModel.getIsLoggedIn().observe(this, isLoggedIn -> {
             if (isLoggedIn != null && isLoggedIn) {
-                // 登录成功，跳转到主页面
+                // 登录成功，保存用户信息
+                SharedPrefManager prefManager = new SharedPrefManager(this);
+                prefManager.setLoggedIn(true);
+                prefManager.setUserId("000001");
+                prefManager.setUsername("admin");
+                prefManager.setEmail("admin");
+                
                 Toast.makeText(this, "登录成功", Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                 startActivity(intent);
