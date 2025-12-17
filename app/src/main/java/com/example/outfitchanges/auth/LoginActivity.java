@@ -23,6 +23,7 @@ public class LoginActivity extends AppCompatActivity {
     private EditText emailEditText;
     private EditText passwordEditText;
     private AuthViewModel authViewModel;
+    private SharedPrefManager prefManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +32,15 @@ public class LoginActivity extends AppCompatActivity {
 
         // 初始化ViewModel
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
+        
+        // 如果已经登录，直接跳转到主界面
+        prefManager = new SharedPrefManager(this);
+        if (prefManager.isLoggedIn() && !prefManager.getToken().isEmpty()) {
+            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+            startActivity(intent);
+            finish();
+            return;
+        }
 
         emailEditText = findViewById(R.id.email_edit_text);
         passwordEditText = findViewById(R.id.password_edit_text);
@@ -91,7 +101,6 @@ public class LoginActivity extends AppCompatActivity {
         authViewModel.getLoginResponse().observe(this, loginResponse -> {
             if (loginResponse != null && loginResponse.isSuccess()) {
                 // 登录成功，保存用户信息和token
-                SharedPrefManager prefManager = new SharedPrefManager(this);
                 prefManager.setLoggedIn(true);
                 
                 // 保存token

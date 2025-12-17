@@ -7,7 +7,10 @@ import android.widget.EditText;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
+import com.example.outfitchanges.MainActivity;
 import com.example.outfitchanges.R;
+import com.example.outfitchanges.auth.model.RegisterResponse;
+import com.example.outfitchanges.utils.SharedPrefManager;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -41,14 +44,35 @@ public class RegisterActivity extends AppCompatActivity {
 
         registerButton.setOnClickListener(v -> attemptRegister());
 
-        // 观察登录状态
-        authViewModel.getIsLoggedIn().observe(this, isLoggedIn -> {
-            if (isLoggedIn != null && isLoggedIn) {
-                // 注册成功后跳转回登录页面
-                Toast.makeText(this, "注册成功，请登录", Toast.LENGTH_SHORT).show();
-                startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
+        // 观察注册响应
+        authViewModel.getRegisterResponse().observe(this, registerResponse -> {
+            if (registerResponse != null && registerResponse.isSuccess()) {
+                // 注册成功，保存用户信息和token
+                SharedPrefManager prefManager = new SharedPrefManager(this);
+                prefManager.setLoggedIn(true);
+                
+                // 保存token
+                if (registerResponse.getToken() != null) {
+                    prefManager.setToken(registerResponse.getToken());
+                }
+                
+                // 保存用户信息
+                if (registerResponse.getUser() != null) {
+                    prefManager.setUserId(String.valueOf(registerResponse.getUser().getId()));
+                    prefManager.setUsername(registerResponse.getUser().getUsername());
+                    prefManager.setEmail(registerResponse.getUser().getEmail());
+                }
+                
+                Toast.makeText(this, "注册成功", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(RegisterActivity.this, MainActivity.class);
+                startActivity(intent);
                 finish();
             }
+        });
+
+        // 观察登录状态（备用）
+        authViewModel.getIsLoggedIn().observe(this, isLoggedIn -> {
+            // 这个观察者主要用于兼容性，实际注册成功通过registerResponse处理
         });
 
         // 观察错误信息
@@ -76,10 +100,11 @@ public class RegisterActivity extends AppCompatActivity {
             return;
         }
 
-        if (code.isEmpty()) {
-            verificationCodeEditText.setError("请输入验证码");
-            return;
-        }
+        // 验证码暂时可选，因为API可能不需要
+        // if (code.isEmpty()) {
+        //     verificationCodeEditText.setError("请输入验证码");
+        //     return;
+        // }
 
         if (password.isEmpty()) {
             passwordEditText.setError("请输入密码");

@@ -10,13 +10,18 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import com.example.outfitchanges.R;
 import com.example.outfitchanges.StartActivity;
+import com.example.outfitchanges.auth.AuthViewModel;
+import com.example.outfitchanges.auth.network.AuthNetworkClient;
+import com.example.outfitchanges.auth.model.ProfileResponse;
 import com.example.outfitchanges.utils.SharedPrefManager;
 import com.google.android.material.card.MaterialCardView;
 
 public class ProfileFragment extends Fragment {
     private SharedPrefManager prefManager;
+    private ProfileViewModel profileViewModel;
     private TextView textUsername;
     private TextView textLoginHint;
     private ImageView imageProfileIcon;
@@ -34,10 +39,42 @@ public class ProfileFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         
         prefManager = new SharedPrefManager(requireContext());
+        profileViewModel = new ViewModelProvider(this).get(ProfileViewModel.class);
         
         initViews(rootView);
         setupClickListeners();
+        setupObservers();
         updateUI();
+        
+        // 如果已登录，加载个人资料
+        if (prefManager.isLoggedIn()) {
+            profileViewModel.loadProfile();
+        }
+    }
+    
+    private void setupObservers() {
+        // 观察个人资料数据
+        profileViewModel.getProfile().observe(getViewLifecycleOwner(), profile -> {
+            if (profile != null) {
+                textUsername.setText(profile.getUsername() != null ? profile.getUsername() : "用户");
+                textLoginHint.setText("点击编辑资料");
+                // 可以在这里加载头像等
+            }
+        });
+        
+        // 观察错误信息
+        profileViewModel.getErrorMessage().observe(getViewLifecycleOwner(), errorMessage -> {
+            if (errorMessage != null && !errorMessage.isEmpty()) {
+                Toast.makeText(getContext(), errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        });
+        
+        // 观察更新成功消息
+        profileViewModel.getUpdateSuccessMessage().observe(getViewLifecycleOwner(), message -> {
+            if (message != null && !message.isEmpty()) {
+                Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void initViews(View view) {
@@ -61,23 +98,47 @@ public class ProfileFragment extends Fragment {
 
         MaterialCardView cardMyFavorites = rootView.findViewById(R.id.card_my_favorites);
         cardMyFavorites.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), MyCollectionActivity.class);
-            startActivity(intent);
+            if (!prefManager.isLoggedIn()) {
+                Toast.makeText(getContext(), "请先登录", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(getActivity(), StartActivity.class);
+                startActivity(intent);
+            } else {
+                // 加载收藏列表并跳转
+                profileViewModel.loadFavorites();
+                Intent intent = new Intent(getActivity(), MyCollectionActivity.class);
+                startActivity(intent);
+            }
         });
 
         MaterialCardView cardMyPosts = rootView.findViewById(R.id.card_my_posts);
         cardMyPosts.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), MyPostsActivity.class);
-            startActivity(intent);
+            if (!prefManager.isLoggedIn()) {
+                Toast.makeText(getContext(), "请先登录", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(getActivity(), StartActivity.class);
+                startActivity(intent);
+            } else {
+                // 加载我的穿搭并跳转
+                profileViewModel.loadUserOutfits();
+                Intent intent = new Intent(getActivity(), MyPostsActivity.class);
+                startActivity(intent);
+            }
         });
 
         MaterialCardView cardPreferences = rootView.findViewById(R.id.card_preferences);
         cardPreferences.setOnClickListener(v -> {
-            PreferencesDialog dialog = new PreferencesDialog(getContext(), prefManager);
-            dialog.setOnPreferencesSavedListener(() -> {
-                // 可以在这里刷新UI
-            });
-            dialog.show();
+            if (!prefManager.isLoggedIn()) {
+                Toast.makeText(getContext(), "请先登录", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(getActivity(), StartActivity.class);
+                startActivity(intent);
+            } else {
+                PreferencesDialog dialog = new PreferencesDialog(getContext(), prefManager);
+                dialog.setProfileViewModel(profileViewModel, getViewLifecycleOwner());
+                dialog.setOnPreferencesSavedListener(() -> {
+                    // 刷新个人资料
+                    profileViewModel.loadProfile();
+                });
+                dialog.show();
+            }
         });
 
         Button btnLogout = rootView.findViewById(R.id.btn_logout);
@@ -99,7 +160,14 @@ public class ProfileFragment extends Fragment {
     }
 
     private void logout() {
+        // 清除本地存储
         prefManager.clear();
+        // 清除网络客户端的 token
+        AuthNetworkClient.getInstance().clearToken();
+        // 清除 ViewModel 的登录状态（如果有）
+        AuthViewModel authViewModel = new ViewModelProvider(requireActivity()).get(AuthViewModel.class);
+        authViewModel.logout();
+        
         Toast.makeText(getContext(), "已退出登录", Toast.LENGTH_SHORT).show();
         Intent intent = new Intent(getActivity(), StartActivity.class);
         startActivity(intent);

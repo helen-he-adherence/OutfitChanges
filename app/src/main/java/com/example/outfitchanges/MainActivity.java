@@ -5,11 +5,13 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.example.outfitchanges.auth.network.AuthNetworkClient;
 import com.example.outfitchanges.ui.home.HomeFragment;
 import com.example.outfitchanges.ui.profile.ProfileFragment;
 import com.example.outfitchanges.ui.publish.PublishFragment;
 import com.example.outfitchanges.ui.smart.SmartFragment;
 import com.example.outfitchanges.ui.weather.WeatherFragment;
+import com.example.outfitchanges.utils.SharedPrefManager;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -20,6 +22,13 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // 初始化 token 到网络客户端（如果存在）
+        SharedPrefManager prefManager = new SharedPrefManager(this);
+        String token = prefManager.getToken();
+        if (token != null && !token.isEmpty()) {
+            AuthNetworkClient.getInstance().setToken(token);
+        }
 
         toolbarTitle = findViewById(R.id.toolbar_title);
         bottomNavigationView = findViewById(R.id.bottom_navigation_view);
