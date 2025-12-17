@@ -1,6 +1,8 @@
 package com.example.outfitchanges;
 
 import android.os.Bundle;
+import android.view.MenuItem;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
@@ -19,6 +21,8 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView toolbarTitle;
     private BottomNavigationView bottomNavigationView;
+    private LinearLayout toolbarMenuContainer;
+    private Fragment currentFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
 
         toolbarTitle = findViewById(R.id.toolbar_title);
         bottomNavigationView = findViewById(R.id.bottom_navigation_view);
+        toolbarMenuContainer = findViewById(R.id.toolbar_menu_container);
 
         // 提前初始化 HomeViewModel 并开始加载数据
         // 这样当用户进入穿搭广场时，数据可能已经加载好了
@@ -89,5 +94,9 @@ public class MainActivity extends AppCompatActivity {
                 .replace(R.id.fragment_container, fragment)
                 .commit();
         toolbarTitle.setText(title);
+        currentFragment = fragment;
+        
+        // 清空菜单容器
+        toolbarMenuContainer.removeAllViews();
     }
 }

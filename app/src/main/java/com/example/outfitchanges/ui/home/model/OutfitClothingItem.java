@@ -40,5 +40,26 @@ public class OutfitClothingItem {
     public List<String> getDesignElements() {
         return designElements == null ? Collections.emptyList() : designElements;
     }
+
+    // Setters
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public void setAttributes(Map<String, String> attributes) {
+        this.attributes = attributes;
+    }
+
+    public void setFabric(List<String> fabric) {
+        this.fabric = fabric;
+    }
+
+    public void setColor(List<String> color) {
+        this.color = color;
+    }
+
+    public void setDesignElements(List<String> designElements) {
+        this.designElements = designElements;
+    }
 }
 

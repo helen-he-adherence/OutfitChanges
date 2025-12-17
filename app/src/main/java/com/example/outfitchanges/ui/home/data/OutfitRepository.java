@@ -176,8 +176,25 @@ public class OutfitRepository {
         call.enqueue(new Callback<UpdateOutfitResponse>() {
             @Override
             public void onResponse(Call<UpdateOutfitResponse> call, Response<UpdateOutfitResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    callback.onSuccess(response.body());
+                android.util.Log.d("OutfitRepository", "updateOutfit response code: " + response.code() + ", isSuccessful: " + response.isSuccessful());
+                if (response.isSuccessful()) {
+                    UpdateOutfitResponse body = response.body();
+                    android.util.Log.d("OutfitRepository", "Response body is null: " + (body == null));
+                    if (body != null) {
+                        android.util.Log.d("OutfitRepository", "Response success: " + body.isSuccess() + ", message: " + body.getMessage());
+                        callback.onSuccess(body);
+                    } else {
+                        // 尝试读取原始响应
+                        try {
+                            if (response.errorBody() != null) {
+                                String errorBody = response.errorBody().string();
+                                android.util.Log.e("OutfitRepository", "Response body is null, error body: " + errorBody);
+                            }
+                        } catch (Exception e) {
+                            android.util.Log.e("OutfitRepository", "Error reading error body", e);
+                        }
+                        callback.onError("更新穿搭失败: 响应体为空");
+                    }
                 } else {
                     String errorMsg = "更新穿搭失败";
                     try {
@@ -199,6 +216,7 @@ public class OutfitRepository {
 
             @Override
             public void onFailure(Call<UpdateOutfitResponse> call, Throwable t) {
+                android.util.Log.e("OutfitRepository", "updateOutfit onFailure", t);
                 callback.onError("网络错误: " + t.getMessage());
             }
         });

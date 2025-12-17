@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="1dp"
+    app:cardBackgroundColor="@color/white"
+    app:strokeWidth="1dp"
+    app:strokeColor="#E0E0E0">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <!-- 删除按钮 -->
+        <ImageView
+            android:id="@+id/btn_delete_item"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:padding="4dp"
+            android:src="@android:drawable/ic_menu_delete"
+            android:tint="@color/text_secondary" />
+
+        <!-- 第一行：输入框 -->
+        <EditText
+            android:id="@+id/edit_item_category"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="32dp"
+            android:background="@drawable/edit_text_background"
+            android:hint="请输入单品类型"
+            android:padding="12dp"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp" />
+
+        <!-- 第二行：标签容器 -->
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chip_group_item_tags"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/edit_item_category"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="32dp"
+            app:chipSpacing="8dp"
+            app:singleLine="false" />
+
+        <!-- 完善细节按钮 -->
+        <Button
+            android:id="@+id/btn_edit_details"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/chip_group_item_tags"
+            android:layout_marginTop="12dp"
+            android:backgroundTint="@color/primary_color"
+            android:text="完善细节"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:textAllCaps="false" />
+
+    </RelativeLayout>
+
+</com.google.android.material.card.MaterialCardView>
+

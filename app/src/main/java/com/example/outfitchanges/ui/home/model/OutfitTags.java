@@ -67,5 +67,26 @@ public class OutfitTags {
         }
         return result;
     }
+
+    // Setters
+    public void setItems(List<OutfitClothingItem> items) {
+        this.items = items;
+    }
+
+    public void setOverallStyle(List<String> overallStyle) {
+        this.overallStyle = overallStyle;
+    }
+
+    public void setOccasion(List<String> occasion) {
+        this.occasion = occasion;
+    }
+
+    public void setSeason(List<String> season) {
+        this.season = season;
+    }
+
+    public void setWeather(List<String> weather) {
+        this.weather = weather;
+    }
 }
 

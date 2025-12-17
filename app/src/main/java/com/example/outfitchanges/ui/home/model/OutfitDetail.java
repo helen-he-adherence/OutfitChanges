@@ -37,7 +37,7 @@ public class OutfitDetail {
     private String createdAt;
 
     @SerializedName("is_public")
-    private boolean isPublic;
+    private Object isPublic; // 可能是Boolean、Integer或null
 
     @SerializedName("is_favorited")
     private Object isFavorited; // 可能是Boolean、Integer或null（未登录用户）
@@ -142,11 +142,23 @@ public class OutfitDetail {
         this.createdAt = createdAt;
     }
 
+    /**
+     * 获取是否公开（处理数字和布尔值两种情况）
+     */
     public boolean isPublic() {
-        return isPublic;
+        if (isPublic == null) {
+            return false;
+        }
+        if (isPublic instanceof Boolean) {
+            return (Boolean) isPublic;
+        }
+        if (isPublic instanceof Number) {
+            return ((Number) isPublic).intValue() != 0;
+        }
+        return false;
     }
 
-    public void setPublic(boolean aPublic) {
+    public void setPublic(Object aPublic) {
         isPublic = aPublic;
     }
 

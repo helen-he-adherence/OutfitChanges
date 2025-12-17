@@ -55,6 +55,9 @@
             android:name=".ui.publish.EditOutfitResultActivity"
             android:exported="false" />
         <activity
+            android:name=".ui.publish.EditOutfitActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.virtual.TryOnResultActivity"
             android:exported="false" />
     </application>
