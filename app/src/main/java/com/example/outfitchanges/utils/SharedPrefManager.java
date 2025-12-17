@@ -13,6 +13,7 @@ public class SharedPrefManager {
     private static final String KEY_AGE = "age";
     private static final String KEY_OCCUPATION = "occupation";
     private static final String KEY_PREFERRED_STYLE = "preferred_style";
+    private static final String KEY_TOKEN = "token";
 
     private final SharedPreferences sharedPreferences;
     private final SharedPreferences.Editor editor;
@@ -28,7 +29,10 @@ public class SharedPrefManager {
     }
 
     public boolean isLoggedIn() {
-        return sharedPreferences.getBoolean(KEY_IS_LOGGED_IN, false);
+        // 检查登录状态和token，两者都需要存在
+        boolean loggedInFlag = sharedPreferences.getBoolean(KEY_IS_LOGGED_IN, false);
+        String token = getToken();
+        return loggedInFlag && token != null && !token.isEmpty();
     }
 
     public void setUserId(String userId) {
@@ -92,6 +96,15 @@ public class SharedPrefManager {
 
     public String getPreferredStyle() {
         return sharedPreferences.getString(KEY_PREFERRED_STYLE, "");
+    }
+
+    public void setToken(String token) {
+        editor.putString(KEY_TOKEN, token);
+        editor.apply();
+    }
+
+    public String getToken() {
+        return sharedPreferences.getString(KEY_TOKEN, "");
     }
 
     public void clear() {

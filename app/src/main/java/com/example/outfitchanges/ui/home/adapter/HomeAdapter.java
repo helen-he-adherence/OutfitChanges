@@ -23,8 +23,13 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
         void onFavoriteClick(String imageUrl);
     }
 
+    public interface OnItemClickListener {
+        void onItemClick(OutfitDisplayModel outfit);
+    }
+
     private final List<OutfitDisplayModel> dataList = new ArrayList<>();
     private OnFavoriteClickListener favoriteClickListener;
+    private OnItemClickListener itemClickListener;
 
     public void setData(List<OutfitDisplayModel> newData) {
         dataList.clear();
@@ -38,6 +43,10 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
         this.favoriteClickListener = listener;
     }
 
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.itemClickListener = listener;
+    }
+
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -48,7 +57,7 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.bind(dataList.get(position), favoriteClickListener);
+        holder.bind(dataList.get(position), favoriteClickListener, itemClickListener);
     }
 
     @Override
@@ -74,7 +83,7 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
             likesText = itemView.findViewById(R.id.text_likes);
         }
 
-        void bind(OutfitDisplayModel model, OnFavoriteClickListener listener) {
+        void bind(OutfitDisplayModel model, OnFavoriteClickListener favoriteListener, OnItemClickListener itemListener) {
             Context context = itemView.getContext();
 
             Glide.with(context)
@@ -96,8 +105,15 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
                     : context.getColor(R.color.text_primary));
 
             favoriteButton.setOnClickListener(v -> {
-                if (listener != null) {
-                    listener.onFavoriteClick(model.getImageUrl());
+                if (favoriteListener != null) {
+                    favoriteListener.onFavoriteClick(model.getImageUrl());
+                }
+            });
+
+            // 设置整个卡片的点击事件
+            itemView.setOnClickListener(v -> {
+                if (itemListener != null) {
+                    itemListener.onItemClick(model);
                 }
             });
         }

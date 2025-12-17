@@ -87,21 +87,35 @@ public class LoginActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        // 观察登录状态
-        authViewModel.getIsLoggedIn().observe(this, isLoggedIn -> {
-            if (isLoggedIn != null && isLoggedIn) {
-                // 登录成功，保存用户信息
+        // 观察登录响应
+        authViewModel.getLoginResponse().observe(this, loginResponse -> {
+            if (loginResponse != null && loginResponse.isSuccess()) {
+                // 登录成功，保存用户信息和token
                 SharedPrefManager prefManager = new SharedPrefManager(this);
                 prefManager.setLoggedIn(true);
-                prefManager.setUserId("000001");
-                prefManager.setUsername("admin");
-                prefManager.setEmail("admin");
+                
+                // 保存token
+                if (loginResponse.getToken() != null) {
+                    prefManager.setToken(loginResponse.getToken());
+                }
+                
+                // 保存用户信息
+                if (loginResponse.getUser() != null) {
+                    prefManager.setUserId(String.valueOf(loginResponse.getUser().getId()));
+                    prefManager.setUsername(loginResponse.getUser().getUsername());
+                    prefManager.setEmail(loginResponse.getUser().getEmail());
+                }
                 
                 Toast.makeText(this, "登录成功", Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                 startActivity(intent);
                 finish();
             }
+        });
+
+        // 观察登录状态（备用）
+        authViewModel.getIsLoggedIn().observe(this, isLoggedIn -> {
+            // 这个观察者主要用于兼容性，实际登录成功通过loginResponse处理
         });
 
         // 观察错误信息
