@@ -57,10 +57,7 @@ public class AuthViewModel extends ViewModel {
                     LoginResponse loginResponse = response.body();
                     android.util.Log.d("AuthViewModel", "登录响应体 - Success: " + loginResponse.isSuccess() + ", Message: " + loginResponse.getMessage());
                     if (loginResponse.isSuccess()) {
-                        // 登录成功，保存 token 到网络客户端
-                        if (loginResponse.getToken() != null) {
-                            networkClient.setToken(loginResponse.getToken());
-                        }
+                        // 登录成功，token 会由 LoginActivity 通过 TokenManager 统一管理
                         // 登录成功
                         AuthViewModel.this.loginResponse.setValue(loginResponse);
                         currentUser.setValue(email);
@@ -195,10 +192,7 @@ public class AuthViewModel extends ViewModel {
                     RegisterResponse registerResponse = response.body();
                     android.util.Log.d("AuthViewModel", "注册响应体 - Success: " + registerResponse.isSuccess() + ", Message: " + registerResponse.getMessage());
                     if (registerResponse.isSuccess()) {
-                        // 注册成功，保存 token 到网络客户端
-                        if (registerResponse.getToken() != null) {
-                            networkClient.setToken(registerResponse.getToken());
-                        }
+                        // 注册成功，token 会由 RegisterActivity 通过 TokenManager 统一管理
                         // 注册成功
                         AuthViewModel.this.registerResponse.setValue(registerResponse);
                         currentUser.setValue(email);
@@ -259,7 +253,7 @@ public class AuthViewModel extends ViewModel {
 
     // 登出方法
     public void logout() {
-        networkClient.clearToken();
+        // Token 清除会由 ProfileFragment 通过 TokenManager 统一管理
         currentUser.setValue(null);
         isLoggedIn.setValue(false);
         errorMessage.setValue(null);

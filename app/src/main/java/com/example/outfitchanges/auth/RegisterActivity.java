@@ -51,9 +51,10 @@ public class RegisterActivity extends AppCompatActivity {
                 SharedPrefManager prefManager = new SharedPrefManager(this);
                 prefManager.setLoggedIn(true);
                 
-                // 保存token
+                // 使用 TokenManager 统一设置 token 到所有 NetworkClient
                 if (registerResponse.getToken() != null) {
-                    prefManager.setToken(registerResponse.getToken());
+                    com.example.outfitchanges.utils.TokenManager.getInstance(RegisterActivity.this)
+                            .setToken(registerResponse.getToken());
                 }
                 
                 // 保存用户信息

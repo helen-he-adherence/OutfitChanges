@@ -68,6 +68,9 @@ public class PublishFragment extends Fragment {
         prefManager = new SharedPrefManager(requireContext());
         viewModel = new ViewModelProvider(this).get(PublishViewModel.class);
         
+        // 从 SharedPreferences 恢复 token 到所有 NetworkClient
+        com.example.outfitchanges.utils.TokenManager.getInstance(requireContext()).restoreToken();
+        
         // 注册权限请求
         requestPermissionLauncher = registerForActivityResult(
                 new ActivityResultContracts.RequestPermission(),

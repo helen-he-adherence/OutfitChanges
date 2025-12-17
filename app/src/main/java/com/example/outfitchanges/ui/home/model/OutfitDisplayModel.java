@@ -8,6 +8,7 @@ public class OutfitDisplayModel {
     private final String owner;
     private int likes;
     private boolean favorite;
+    private int outfitId; // 添加outfitId字段，用于收藏等功能
 
     public OutfitDisplayModel(String imageUrl, List<String> tags, String owner, int likes) {
         this.imageUrl = imageUrl;
@@ -47,6 +48,14 @@ public class OutfitDisplayModel {
 
     public void setFavorite(boolean favorite) {
         this.favorite = favorite;
+    }
+
+    public int getOutfitId() {
+        return outfitId;
+    }
+
+    public void setOutfitId(int outfitId) {
+        this.outfitId = outfitId;
     }
 }
 

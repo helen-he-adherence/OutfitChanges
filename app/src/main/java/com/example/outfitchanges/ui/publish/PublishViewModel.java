@@ -3,6 +3,10 @@ package com.example.outfitchanges.ui.publish;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
+import com.example.outfitchanges.ui.home.model.CreateOutfitResponse;
+import com.example.outfitchanges.ui.home.model.UpdateOutfitRequest;
+import com.example.outfitchanges.ui.home.model.UpdateOutfitResponse;
+import com.example.outfitchanges.ui.home.data.OutfitRepository;
 import com.example.outfitchanges.ui.publish.model.UploadResponse;
 import com.example.outfitchanges.ui.publish.network.PublishApiService;
 import com.example.outfitchanges.ui.publish.network.PublishNetworkClient;
@@ -16,14 +20,26 @@ import retrofit2.Response;
 import java.io.File;
 
 public class PublishViewModel extends ViewModel {
-    private final MutableLiveData<UploadResponse> uploadResult = new MutableLiveData<>();
-    private final MutableLiveData<UploadResponse> saveResult = new MutableLiveData<>();
+    private final MutableLiveData<CreateOutfitResponse> createOutfitResult = new MutableLiveData<>();
+    private final MutableLiveData<UpdateOutfitResponse> updateOutfitResult = new MutableLiveData<>();
+    private final MutableLiveData<UploadResponse> uploadResult = new MutableLiveData<>(); // 保持兼容性
+    private final MutableLiveData<UploadResponse> saveResult = new MutableLiveData<>(); // 保持兼容性
     private final MutableLiveData<String> errorMessage = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isLoading = new MutableLiveData<>(false);
     private final PublishApiService apiService;
+    private final OutfitRepository outfitRepository;
 
     public PublishViewModel() {
         apiService = PublishNetworkClient.getInstance().getApiService();
+        outfitRepository = new OutfitRepository();
+    }
+
+    public LiveData<CreateOutfitResponse> getCreateOutfitResult() {
+        return createOutfitResult;
+    }
+
+    public LiveData<UpdateOutfitResponse> getUpdateOutfitResult() {
+        return updateOutfitResult;
     }
 
     public LiveData<UploadResponse> getUploadResult() {
@@ -42,7 +58,10 @@ public class PublishViewModel extends ViewModel {
         return isLoading;
     }
 
-    public void uploadImage(File imageFile) {
+    /**
+     * 创建穿搭（新的API，需要登录）
+     */
+    public void createOutfit(File imageFile, String modifiedTagsJson) {
         if (imageFile == null || !imageFile.exists()) {
             errorMessage.setValue("图片文件不存在");
             return;
@@ -51,123 +70,66 @@ public class PublishViewModel extends ViewModel {
         isLoading.setValue(true);
         errorMessage.setValue(null);
 
-        RequestBody requestFile = RequestBody.create(
-                MediaType.parse("image/*"),
-                imageFile
-        );
-
-        MultipartBody.Part imagePart = MultipartBody.Part.createFormData(
-                "image",
-                imageFile.getName(),
-                requestFile
-        );
-
-        Call<UploadResponse> call = apiService.uploadImage(imagePart);
-        call.enqueue(new Callback<UploadResponse>() {
+        outfitRepository.createOutfit(imageFile, modifiedTagsJson, new OutfitRepository.OutfitCallback<CreateOutfitResponse>() {
             @Override
-            public void onResponse(Call<UploadResponse> call, Response<UploadResponse> response) {
+            public void onSuccess(CreateOutfitResponse data) {
                 isLoading.setValue(false);
-                if (response.isSuccessful() && response.body() != null) {
-                    uploadResult.setValue(response.body());
-                } else {
-                    String errorMsg = "上传失败";
-                    try {
-                        if (response.code() == 500) {
-                            errorMsg = "服务器内部错误，请稍后重试";
-                        } else if (response.errorBody() != null) {
-                            String errorBody = response.errorBody().string();
-                            android.util.Log.e("PublishViewModel", "Error response body: " + errorBody);
-                            errorMsg = "上传失败: " + response.code();
-                        } else if (response.message() != null && !response.message().isEmpty()) {
-                            errorMsg = "上传失败: " + response.message();
-                        } else {
-                            errorMsg = "上传失败: HTTP " + response.code();
-                        }
-                    } catch (Exception e) {
-                        android.util.Log.e("PublishViewModel", "Error reading error body", e);
-                        errorMsg = "上传失败: HTTP " + response.code();
-                    }
-                    errorMessage.setValue(errorMsg);
-                }
+                createOutfitResult.setValue(data);
+                // 同时设置uploadResult以保持兼容性
+                UploadResponse uploadResponse = new UploadResponse();
+                uploadResponse.setSuccess(data.isSuccess());
+                uploadResponse.setMessage(data.getMessage());
+                uploadResponse.setImageUrl(data.getImageUrl());
+                uploadResponse.setOutfitId(data.getOutfitId());
+                // 如果需要tags，可以从data.getTags()转换
+                uploadResult.setValue(uploadResponse);
             }
 
             @Override
-            public void onFailure(Call<UploadResponse> call, Throwable t) {
+            public void onError(String errorMsg) {
                 isLoading.setValue(false);
-                errorMessage.setValue("网络错误: " + t.getMessage());
+                errorMessage.setValue(errorMsg);
             }
         });
     }
 
-    public void uploadImageWithModifiedTags(File imageFile, String modifiedTagsJson) {
-        if (imageFile == null || !imageFile.exists()) {
-            errorMessage.setValue("图片文件不存在");
-            return;
-        }
-
+    /**
+     * 更新穿搭标签（需要登录）
+     */
+    public void updateOutfitTags(int outfitId, com.example.outfitchanges.ui.home.model.OutfitTags tags, Boolean isPublic) {
         isLoading.setValue(true);
         errorMessage.setValue(null);
 
-        RequestBody requestFile = RequestBody.create(
-                MediaType.parse("image/*"),
-                imageFile
-        );
+        UpdateOutfitRequest request = new UpdateOutfitRequest();
+        request.setTags(tags);
+        request.setIsPublic(isPublic);
 
-        MultipartBody.Part imagePart = MultipartBody.Part.createFormData(
-                "image",
-                imageFile.getName(),
-                requestFile
-        );
-
-        // 将 JSON 字符串作为文本字段发送（form-data），而不是 JSON 格式
-        // 根据 curl 示例：-F "modified_tags={\"items\":[...]}"
-        RequestBody tagsBody = RequestBody.create(
-                MediaType.parse("text/plain"),
-                modifiedTagsJson
-        );
-
-        android.util.Log.d("PublishViewModel", "Sending modified_tags: " + modifiedTagsJson);
-        android.util.Log.d("PublishViewModel", "Image file: " + (imageFile != null ? imageFile.getAbsolutePath() : "null"));
-
-        Call<UploadResponse> call = apiService.uploadImageWithTags(imagePart, tagsBody);
-        call.enqueue(new Callback<UploadResponse>() {
+        outfitRepository.updateOutfit(outfitId, request, new OutfitRepository.OutfitCallback<UpdateOutfitResponse>() {
             @Override
-            public void onResponse(Call<UploadResponse> call, Response<UploadResponse> response) {
+            public void onSuccess(UpdateOutfitResponse data) {
                 isLoading.setValue(false);
-                android.util.Log.d("PublishViewModel", "Save response code: " + response.code());
-                android.util.Log.d("PublishViewModel", "Save response successful: " + response.isSuccessful());
-                if (response.isSuccessful() && response.body() != null) {
-                    android.util.Log.d("PublishViewModel", "Save success: " + response.body().isSuccess());
-                    // 保存修改后的标签时，使用 saveResult 而不是 uploadResult
-                    // 这样不会触发跳转到编辑界面
-                    saveResult.setValue(response.body());
-                } else {
-                    String errorMsg = "保存失败";
-                    try {
-                        if (response.code() == 500) {
-                            errorMsg = "服务器内部错误，请稍后重试";
-                        } else if (response.errorBody() != null) {
-                            String errorBody = response.errorBody().string();
-                            android.util.Log.e("PublishViewModel", "Save error response body: " + errorBody);
-                            errorMsg = "保存失败: HTTP " + response.code();
-                        } else if (response.message() != null && !response.message().isEmpty()) {
-                            errorMsg = "保存失败: " + response.message();
-                        } else {
-                            errorMsg = "保存失败: HTTP " + response.code();
-                        }
-                    } catch (Exception e) {
-                        android.util.Log.e("PublishViewModel", "Error reading error body", e);
-                        errorMsg = "保存失败: HTTP " + response.code();
-                    }
-                    errorMessage.setValue(errorMsg);
-                }
+                updateOutfitResult.setValue(data);
             }
 
             @Override
-            public void onFailure(Call<UploadResponse> call, Throwable t) {
+            public void onError(String errorMsg) {
                 isLoading.setValue(false);
-                errorMessage.setValue("网络错误: " + t.getMessage());
+                errorMessage.setValue(errorMsg);
             }
         });
+    }
+
+    /**
+     * 旧版uploadImage方法（保持兼容性，现在调用createOutfit）
+     */
+    public void uploadImage(File imageFile) {
+        createOutfit(imageFile, null);
+    }
+
+    /**
+     * 上传图片并修改标签（新的API，需要登录）
+     */
+    public void uploadImageWithModifiedTags(File imageFile, String modifiedTagsJson) {
+        createOutfit(imageFile, modifiedTagsJson);
     }
 }

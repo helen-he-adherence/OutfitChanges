@@ -4,9 +4,11 @@ import android.os.Bundle;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.example.outfitchanges.auth.network.AuthNetworkClient;
 import com.example.outfitchanges.ui.home.HomeFragment;
+import com.example.outfitchanges.ui.home.HomeViewModel;
 import com.example.outfitchanges.ui.profile.ProfileFragment;
 import com.example.outfitchanges.ui.publish.PublishFragment;
 import com.example.outfitchanges.ui.smart.SmartFragment;
@@ -23,17 +25,29 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // 初始化 token 到网络客户端（如果存在）
-        SharedPrefManager prefManager = new SharedPrefManager(this);
-        String token = prefManager.getToken();
-        if (token != null && !token.isEmpty()) {
-            AuthNetworkClient.getInstance().setToken(token);
-        }
+        // 从 SharedPreferences 恢复 token 到所有 NetworkClient
+        com.example.outfitchanges.utils.TokenManager.getInstance(this).restoreToken();
 
         toolbarTitle = findViewById(R.id.toolbar_title);
         bottomNavigationView = findViewById(R.id.bottom_navigation_view);
 
+        // 提前初始化 HomeViewModel 并开始加载数据
+        // 这样当用户进入穿搭广场时，数据可能已经加载好了
+        preloadHomeData();
+
         setupBottomNavigation();
+    }
+
+    /**
+     * 提前加载穿搭广场数据
+     * 在应用启动时就开始加载，这样用户进入页面时就能立即看到内容
+     */
+    private void preloadHomeData() {
+        ViewModelProvider.AndroidViewModelFactory factory = 
+            new ViewModelProvider.AndroidViewModelFactory(getApplication());
+        HomeViewModel homeViewModel = new ViewModelProvider(this, factory).get(HomeViewModel.class);
+        // 开始加载数据
+        homeViewModel.loadData();
     }
 
     private void setupBottomNavigation() {

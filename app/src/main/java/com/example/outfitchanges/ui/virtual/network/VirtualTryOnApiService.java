@@ -15,7 +15,6 @@ public interface VirtualTryOnApiService {
     @Multipart
     @POST("api/virtual-tryon")
     Call<VirtualTryOnResponse> submitTryOnTask(
-            @Header("Authorization") String authorization,
             @Part MultipartBody.Part targetImage,
             @Part("outfit_id") RequestBody outfitId
     );
@@ -23,15 +22,11 @@ public interface VirtualTryOnApiService {
     @Multipart
     @POST("api/virtual-tryon")
     Call<VirtualTryOnResponse> submitTryOnTaskWithSourceImage(
-            @Header("Authorization") String authorization,
             @Part MultipartBody.Part targetImage,
             @Part MultipartBody.Part sourceImage
     );
 
     @GET("api/virtual-tryon/{taskId}")
-    Call<VirtualTryOnResponse> getTaskStatus(
-            @Header("Authorization") String authorization,
-            @Path("taskId") String taskId
-    );
+    Call<VirtualTryOnResponse> getTaskStatus(@Path("taskId") String taskId);
 }
 

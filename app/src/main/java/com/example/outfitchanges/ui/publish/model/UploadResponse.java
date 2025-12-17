@@ -37,5 +37,25 @@ public class UploadResponse {
     public OutfitAnalysisTags getTags() {
         return tags;
     }
+
+    public void setSuccess(boolean success) {
+        this.success = success;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public void setOutfitId(int outfitId) {
+        this.outfitId = outfitId;
+    }
+
+    public void setTags(OutfitAnalysisTags tags) {
+        this.tags = tags;
+    }
 }
 

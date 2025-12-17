@@ -15,16 +15,12 @@ public class StartActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start);
 
+        // 从 SharedPreferences 恢复 token 到所有 NetworkClient
+        com.example.outfitchanges.utils.TokenManager.getInstance(this).restoreToken();
+        
         // 检查是否已登录
         SharedPrefManager prefManager = new SharedPrefManager(this);
-        String token = prefManager.getToken();
-        
-        // 如果有 token，初始化到网络客户端
-        if (token != null && !token.isEmpty()) {
-            AuthNetworkClient.getInstance().setToken(token);
-        }
-        
-        if (prefManager.isLoggedIn() && !token.isEmpty()) {
+        if (prefManager.isLoggedIn() && com.example.outfitchanges.utils.TokenManager.getInstance(this).hasToken()) {
             // 已登录，直接跳转到主界面
             Intent intent = new Intent(StartActivity.this, MainActivity.class);
             startActivity(intent);

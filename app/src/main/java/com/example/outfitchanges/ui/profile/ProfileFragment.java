@@ -160,10 +160,10 @@ public class ProfileFragment extends Fragment {
     }
 
     private void logout() {
+        // 使用 TokenManager 统一清除所有 NetworkClient 的 token
+        com.example.outfitchanges.utils.TokenManager.getInstance(requireContext()).clearToken();
         // 清除本地存储
         prefManager.clear();
-        // 清除网络客户端的 token
-        AuthNetworkClient.getInstance().clearToken();
         // 清除 ViewModel 的登录状态（如果有）
         AuthViewModel authViewModel = new ViewModelProvider(requireActivity()).get(AuthViewModel.class);
         authViewModel.logout();

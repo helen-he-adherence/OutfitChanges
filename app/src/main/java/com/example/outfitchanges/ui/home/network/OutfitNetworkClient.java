@@ -1,5 +1,6 @@
 package com.example.outfitchanges.ui.home.network;
 
+import com.example.outfitchanges.auth.network.TokenInterceptor;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import javax.net.ssl.HostnameVerifier;
@@ -20,6 +21,7 @@ public class OutfitNetworkClient {
 
     private static final String BASE_URL = "https://luckyhe.fun/";
     private static Retrofit retrofit;
+    private static TokenInterceptor tokenInterceptor = new TokenInterceptor();
 
     private OutfitNetworkClient() {
     }
@@ -33,6 +35,27 @@ public class OutfitNetworkClient {
                     .build();
         }
         return retrofit;
+    }
+    
+    /**
+     * 设置 token，后续请求会自动添加 Authorization header
+     */
+    public static void setToken(String token) {
+        tokenInterceptor.setToken(token);
+    }
+
+    /**
+     * 清除 token
+     */
+    public static void clearToken() {
+        tokenInterceptor.clearToken();
+    }
+
+    /**
+     * 获取当前 token（用于临时保存和恢复）
+     */
+    public static String getToken() {
+        return tokenInterceptor.getToken();
     }
 
     private static OkHttpClient buildUnsafeClient() {
@@ -59,7 +82,7 @@ public class OutfitNetworkClient {
             X509TrustManager trustManager = (X509TrustManager) trustAllCerts[0];
 
             HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
-            loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BASIC);
+            loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
             HostnameVerifier allHostsValid = new HostnameVerifier() {
                 @Override
@@ -71,7 +94,8 @@ public class OutfitNetworkClient {
             return new OkHttpClient.Builder()
                     .sslSocketFactory(sslContext.getSocketFactory(), trustManager)
                     .hostnameVerifier(allHostsValid)
-                    .addInterceptor(loggingInterceptor)
+                    .addInterceptor(tokenInterceptor) // 先添加 token 拦截器
+                    .addInterceptor(loggingInterceptor) // 再添加日志拦截器
                     .build();
         } catch (Exception e) {
             return new OkHttpClient();

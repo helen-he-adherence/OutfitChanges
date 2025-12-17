@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.List;
 
 public class VirtualTryOnFragment extends Fragment {
     private VirtualTryOnViewModel viewModel;
@@ -61,6 +62,9 @@ public class VirtualTryOnFragment extends Fragment {
         
         prefManager = new SharedPrefManager(requireContext());
         viewModel = new ViewModelProvider(this).get(VirtualTryOnViewModel.class);
+        
+        // 从 SharedPreferences 恢复 token 到所有 NetworkClient
+        com.example.outfitchanges.utils.TokenManager.getInstance(requireContext()).restoreToken();
         
         initViews(view);
         setupImagePicker();
@@ -114,18 +118,19 @@ public class VirtualTryOnFragment extends Fragment {
                 return;
             }
             
-            String token = prefManager.getToken();
+            String token = com.example.outfitchanges.utils.TokenManager.getInstance(requireContext()).getToken();
             if (token == null || token.isEmpty()) {
                 Toast.makeText(getContext(), "请先登录", Toast.LENGTH_SHORT).show();
                 return;
             }
             
-            // TODO: 从outfit对象中获取ID
-            // 暂时使用一个默认值，需要根据实际数据结构调整
-            // 可能需要从API响应中获取outfitId，或者修改OutfitDisplayModel添加id字段
-            Toast.makeText(getContext(), "功能开发中，需要outfitId", Toast.LENGTH_SHORT).show();
-            // int outfitId = outfit.getId();
-            // viewModel.submitTryOnWithOutfitId(personImageFile, outfitId, token);
+            // 使用outfitId进行虚拟试衣
+            int outfitId = outfit.getOutfitId();
+            if (outfitId > 0) {
+                viewModel.submitTryOnWithOutfitId(personImageFile, outfitId, token);
+            } else {
+                Toast.makeText(getContext(), "无法获取穿搭ID", Toast.LENGTH_SHORT).show();
+            }
         });
         
         StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
@@ -233,7 +238,7 @@ public class VirtualTryOnFragment extends Fragment {
     private String currentTaskId;
 
     private void startPollingTaskStatus(String taskId) {
-        String token = prefManager.getToken();
+        String token = com.example.outfitchanges.utils.TokenManager.getInstance(requireContext()).getToken();
         if (token == null || token.isEmpty()) {
             return;
         }
@@ -284,9 +289,69 @@ public class VirtualTryOnFragment extends Fragment {
     }
 
     private void loadCollections() {
-        // TODO: 从服务器加载收藏的穿搭
-        // 暂时使用空列表
-        adapter.setData(new ArrayList<>());
+        // 检查是否登录
+        if (!prefManager.isLoggedIn()) {
+            adapter.setData(new ArrayList<>());
+            return;
+        }
+        
+        // 使用ProfileViewModel加载收藏列表
+        com.example.outfitchanges.ui.profile.ProfileViewModel profileViewModel = 
+                new ViewModelProvider(this).get(com.example.outfitchanges.ui.profile.ProfileViewModel.class);
+        
+        profileViewModel.getFavorites().observe(getViewLifecycleOwner(), favoritesResponse -> {
+            if (favoritesResponse != null && favoritesResponse.isSuccess()) {
+                List<com.example.outfitchanges.ui.home.model.OutfitDisplayModel> displayModels = new ArrayList<>();
+                if (favoritesResponse.getFavorites() != null) {
+                    for (com.example.outfitchanges.auth.model.FavoritesResponse.FavoriteItem item : favoritesResponse.getFavorites()) {
+                        displayModels.add(toDisplayModelFromFavorite(item));
+                    }
+                }
+                adapter.setData(displayModels);
+            }
+        });
+        
+        profileViewModel.getErrorMessage().observe(getViewLifecycleOwner(), errorMessage -> {
+            if (errorMessage != null && !errorMessage.isEmpty()) {
+                Toast.makeText(getContext(), errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        });
+        
+        profileViewModel.loadFavorites();
+    }
+    
+    private com.example.outfitchanges.ui.home.model.OutfitDisplayModel toDisplayModelFromFavorite(
+            com.example.outfitchanges.auth.model.FavoritesResponse.FavoriteItem item) {
+        com.example.outfitchanges.ui.home.model.OutfitTags tags = item.getTags();
+        List<String> mergedTags = new ArrayList<>();
+
+        if (tags != null) {
+            addLimited(mergedTags, tags.getSeason(), 1);
+            addLimited(mergedTags, tags.getOverallStyle(), 2);
+            addLimited(mergedTags, tags.getOccasion(), 1);
+            addLimited(mergedTags, tags.getAllCategories(), 2);
+            addLimited(mergedTags, tags.getAllColors(), 1);
+            addLimited(mergedTags, tags.getWeather(), 1);
+        }
+
+        String owner = "收藏";
+        int likes = item.getLikes();
+
+        com.example.outfitchanges.ui.home.model.OutfitDisplayModel model = 
+                new com.example.outfitchanges.ui.home.model.OutfitDisplayModel(item.getImageUrl(), mergedTags, owner, likes);
+        model.setOutfitId(item.getId());
+        model.setFavorite(true);
+        return model;
+    }
+    
+    private void addLimited(List<String> target, List<String> source, int limit) {
+        if (source == null || source.isEmpty() || limit <= 0) return;
+        int count = 0;
+        for (String s : source) {
+            if (count >= limit) break;
+            target.add(s);
+            count++;
+        }
     }
 }
 

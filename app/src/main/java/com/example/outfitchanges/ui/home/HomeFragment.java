@@ -27,6 +27,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 import com.example.outfitchanges.R;
 import com.example.outfitchanges.ui.home.adapter.HomeAdapter;
+import com.example.outfitchanges.ui.home.model.OutfitDisplayModel;
 import com.example.outfitchanges.ui.weather.WeatherViewModel;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
@@ -35,6 +36,7 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -48,6 +50,7 @@ public class HomeFragment extends Fragment {
     private DrawerLayout drawerLayout;
     private View filterDrawer;
     private EditText inputSearch;
+    private View loadingContainer;
     private final Map<String, Set<String>> localFilters = new HashMap<>();
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 2001;
 
@@ -67,7 +70,11 @@ public class HomeFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        viewModel = new ViewModelProvider(this).get(HomeViewModel.class);
+        // 使用 requireActivity() 作为 ViewModelStoreOwner，这样可以与 MainActivity 共享同一个 ViewModel 实例
+        // MainActivity 已经在 onCreate 时预加载了数据，这里直接使用即可
+        viewModel = new ViewModelProvider(requireActivity(),
+                new ViewModelProvider.AndroidViewModelFactory(requireActivity().getApplication()))
+                .get(HomeViewModel.class);
         weatherViewModel = new ViewModelProvider(requireActivity(),
                 new ViewModelProvider.AndroidViewModelFactory(requireActivity().getApplication()))
                 .get(WeatherViewModel.class);
@@ -76,10 +83,18 @@ public class HomeFragment extends Fragment {
         setupRecyclerView();
         setupFilters(view);
         observeData();
-        viewModel.loadData();
-        observeWeather();
-        triggerWeatherLoadIfNeeded();
-        tryStartLocate();
+        // 检查数据是否已经加载，如果没有则加载
+        // 由于 MainActivity 已经预加载，这里可能不需要再次加载
+        // 但如果数据为空且不在加载中，说明预加载还没完成或失败了，这里作为备用加载
+        Boolean isLoading = viewModel.getLoading().getValue();
+        List<com.example.outfitchanges.ui.home.model.OutfitDisplayModel> currentData = viewModel.getOutfits().getValue();
+        if ((currentData == null || currentData.isEmpty()) && (isLoading == null || !isLoading)) {
+            viewModel.loadData();
+        }
+        // 移除天气相关的自动筛选
+        // observeWeather();
+        // triggerWeatherLoadIfNeeded();
+        // tryStartLocate();
     }
 
     private void initLocalFilters() {
@@ -96,6 +111,7 @@ public class HomeFragment extends Fragment {
         filterDrawer = view.findViewById(R.id.filter_drawer);
         recyclerView = view.findViewById(R.id.recycler_view);
         inputSearch = view.findViewById(R.id.input_search);
+        loadingContainer = view.findViewById(R.id.loading_container);
         MaterialCardView btnFilter = view.findViewById(R.id.btn_filter);
         ImageButton btnCloseFilter = view.findViewById(R.id.btn_close_filter);
         Button btnClearFilters = view.findViewById(R.id.btn_clear_filters);
@@ -152,6 +168,23 @@ public class HomeFragment extends Fragment {
             adapter.setData(outfitDisplayModels);
         });
 
+        // 观察加载状态，显示/隐藏加载动画
+        viewModel.getLoading().observe(getViewLifecycleOwner(), isLoading -> {
+            if (isLoading != null && isLoading) {
+                // 正在加载，显示加载动画
+                loadingContainer.setVisibility(View.VISIBLE);
+                // 如果列表为空，隐藏列表；如果有数据，保持显示（加载指示器会覆盖在上面）
+                List<OutfitDisplayModel> currentData = viewModel.getOutfits().getValue();
+                if (currentData == null || currentData.isEmpty()) {
+                    recyclerView.setVisibility(View.GONE);
+                }
+            } else {
+                // 加载完成，隐藏加载动画，显示列表
+                loadingContainer.setVisibility(View.GONE);
+                recyclerView.setVisibility(View.VISIBLE);
+            }
+        });
+
         viewModel.getError().observe(getViewLifecycleOwner(), message -> {
             if (message != null && !message.isEmpty()) {
                 Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
@@ -159,11 +192,12 @@ public class HomeFragment extends Fragment {
         });
     }
 
-    private void observeWeather() {
-        weatherViewModel.getCurrentWeather().observe(getViewLifecycleOwner(), now -> {
-            viewModel.applyWeatherDefaults(now);
-        });
-    }
+    // 已移除天气相关的自动筛选功能
+    // private void observeWeather() {
+    //     weatherViewModel.getCurrentWeather().observe(getViewLifecycleOwner(), now -> {
+    //         viewModel.applyWeatherDefaults(now);
+    //     });
+    // }
 
     private void triggerWeatherLoadIfNeeded() {
         String locationId = weatherViewModel.getSavedLocationId();

@@ -71,8 +71,8 @@ public class VirtualTryOnViewModel extends ViewModel {
                 String.valueOf(outfitId)
         );
 
-        String authHeader = "Bearer " + token;
-        Call<VirtualTryOnResponse> call = apiService.submitTryOnTask(authHeader, imagePart, outfitIdBody);
+        // Token 会通过拦截器自动添加，不需要手动传递
+        Call<VirtualTryOnResponse> call = apiService.submitTryOnTask(imagePart, outfitIdBody);
         call.enqueue(new Callback<VirtualTryOnResponse>() {
             @Override
             public void onResponse(Call<VirtualTryOnResponse> call, Response<VirtualTryOnResponse> response) {
@@ -155,12 +155,12 @@ public class VirtualTryOnViewModel extends ViewModel {
                 sourceFile
         );
 
-        String authHeader = "Bearer " + token;
-        android.util.Log.d("VirtualTryOnViewModel", "创建API请求，authHeader: " + (authHeader.length() > 20 ? authHeader.substring(0, 20) + "..." : authHeader));
+        // Token 会通过拦截器自动添加，不需要手动传递
+        android.util.Log.d("VirtualTryOnViewModel", "创建API请求");
         android.util.Log.d("VirtualTryOnViewModel", "Target image part name: " + targetImageFile.getName());
         android.util.Log.d("VirtualTryOnViewModel", "Source image part name: " + sourceImageFile.getName());
         
-        Call<VirtualTryOnResponse> call = apiService.submitTryOnTaskWithSourceImage(authHeader, targetImagePart, sourceImagePart);
+        Call<VirtualTryOnResponse> call = apiService.submitTryOnTaskWithSourceImage(targetImagePart, sourceImagePart);
         android.util.Log.d("VirtualTryOnViewModel", "API请求已创建，开始执行...");
         call.enqueue(new Callback<VirtualTryOnResponse>() {
             @Override
@@ -220,8 +220,8 @@ public class VirtualTryOnViewModel extends ViewModel {
         android.util.Log.d("VirtualTryOnViewModel", "TaskId: " + taskId);
         android.util.Log.d("VirtualTryOnViewModel", "Token length: " + (token != null ? token.length() : 0));
         
-        String authHeader = "Bearer " + token;
-        Call<VirtualTryOnResponse> call = apiService.getTaskStatus(authHeader, taskId);
+        // Token 会通过拦截器自动添加，不需要手动传递
+        Call<VirtualTryOnResponse> call = apiService.getTaskStatus(taskId);
         android.util.Log.d("VirtualTryOnViewModel", "API请求已创建，开始执行...");
         call.enqueue(new Callback<VirtualTryOnResponse>() {
             @Override

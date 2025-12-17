@@ -155,7 +155,7 @@ public class FreeTryOnFragment extends Fragment {
                 android.util.Log.d("FreeTryOnFragment", "Person image: " + (personImageFile != null ? personImageFile.getAbsolutePath() : "null") + ", exists: " + (personImageFile != null && personImageFile.exists()));
                 android.util.Log.d("FreeTryOnFragment", "Cloth image: " + (clothImageFile != null ? clothImageFile.getAbsolutePath() : "null") + ", exists: " + (clothImageFile != null && clothImageFile.exists()));
                 
-                String token = prefManager.getToken();
+                String token = com.example.outfitchanges.utils.TokenManager.getInstance(requireContext()).getToken();
                 android.util.Log.d("FreeTryOnFragment", "Token: " + (token != null && !token.isEmpty() ? "存在（长度: " + token.length() + "）" : "不存在"));
                 if (token == null || token.isEmpty()) {
                     Toast.makeText(getContext(), "请先登录", Toast.LENGTH_SHORT).show();
@@ -310,7 +310,7 @@ public class FreeTryOnFragment extends Fragment {
         android.util.Log.d("FreeTryOnFragment", "=== startPollingTaskStatus 开始 ===");
         android.util.Log.d("FreeTryOnFragment", "TaskId: " + taskId);
         
-        String token = prefManager.getToken();
+        String token = com.example.outfitchanges.utils.TokenManager.getInstance(requireContext()).getToken();
         if (token == null || token.isEmpty()) {
             android.util.Log.e("FreeTryOnFragment", "Token is empty, cannot poll");
             return;

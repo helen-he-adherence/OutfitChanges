@@ -35,7 +35,8 @@ public class LoginActivity extends AppCompatActivity {
         
         // 如果已经登录，直接跳转到主界面
         prefManager = new SharedPrefManager(this);
-        if (prefManager.isLoggedIn() && !prefManager.getToken().isEmpty()) {
+        com.example.outfitchanges.utils.TokenManager tokenManager = com.example.outfitchanges.utils.TokenManager.getInstance(this);
+        if (prefManager.isLoggedIn() && tokenManager.hasToken()) {
             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
             startActivity(intent);
             finish();
@@ -103,9 +104,10 @@ public class LoginActivity extends AppCompatActivity {
                 // 登录成功，保存用户信息和token
                 prefManager.setLoggedIn(true);
                 
-                // 保存token
+                // 使用 TokenManager 统一设置 token 到所有 NetworkClient
                 if (loginResponse.getToken() != null) {
-                    prefManager.setToken(loginResponse.getToken());
+                    com.example.outfitchanges.utils.TokenManager.getInstance(LoginActivity.this)
+                            .setToken(loginResponse.getToken());
                 }
                 
                 // 保存用户信息
