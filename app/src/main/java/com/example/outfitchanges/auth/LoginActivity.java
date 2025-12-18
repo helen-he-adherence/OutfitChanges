@@ -81,6 +81,11 @@ public class LoginActivity extends AppCompatActivity {
 
         // 游客登录按钮点击事件
         guestLoginButton.setOnClickListener(v -> {
+            // 设置游客模式标记
+            prefManager.setGuestMode(true);
+            prefManager.setLoggedIn(false);
+            // 清除token（如果有）
+            com.example.outfitchanges.utils.TokenManager.getInstance(this).clearToken();
             // 直接跳转到主界面
             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
             startActivity(intent);
@@ -103,6 +108,8 @@ public class LoginActivity extends AppCompatActivity {
             if (loginResponse != null && loginResponse.isSuccess()) {
                 // 登录成功，保存用户信息和token
                 prefManager.setLoggedIn(true);
+                // 清除游客模式标记
+                prefManager.setGuestMode(false);
                 
                 // 使用 TokenManager 统一设置 token 到所有 NetworkClient
                 if (loginResponse.getToken() != null) {

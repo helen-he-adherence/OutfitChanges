@@ -121,8 +121,8 @@ public class PublishFragment extends Fragment {
     private void setupClickListeners() {
         // 点击图片区域选择图片
         cardImageContainer.setOnClickListener(v -> {
-            if (!prefManager.isLoggedIn()) {
-                Toast.makeText(getContext(), "请先登录", Toast.LENGTH_SHORT).show();
+            if (prefManager.isGuestMode() || !prefManager.isLoggedIn()) {
+                Toast.makeText(getContext(), "请先登录，才能发布穿搭", Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(getActivity(), StartActivity.class);
                 startActivity(intent);
                 return;
@@ -132,6 +132,16 @@ public class PublishFragment extends Fragment {
                 requestStoragePermissionAndPickImage();
             }
         });
+    }
+    
+    @Override
+    public void onResume() {
+        super.onResume();
+        // 检查登录状态，如果是游客，显示提示
+        if (prefManager.isGuestMode() || !prefManager.isLoggedIn()) {
+            // 显示默认页面（上传提示）
+            resetToInitialState();
+        }
     }
     
     private void observeViewModel() {

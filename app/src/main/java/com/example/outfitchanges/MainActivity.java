@@ -12,9 +12,11 @@ import com.example.outfitchanges.auth.network.AuthNetworkClient;
 import com.example.outfitchanges.ui.home.HomeFragment;
 import com.example.outfitchanges.ui.home.HomeViewModel;
 import com.example.outfitchanges.ui.profile.ProfileFragment;
+import com.example.outfitchanges.ui.profile.ProfileViewModel;
 import com.example.outfitchanges.ui.publish.PublishFragment;
 import com.example.outfitchanges.ui.smart.SmartFragment;
 import com.example.outfitchanges.ui.weather.WeatherFragment;
+import com.example.outfitchanges.ui.weather.WeatherViewModel;
 import com.example.outfitchanges.utils.SharedPrefManager;
 
 public class MainActivity extends AppCompatActivity {
@@ -44,14 +46,30 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * 提前加载穿搭广场数据
+     * 提前加载数据
      * 在应用启动时就开始加载，这样用户进入页面时就能立即看到内容
      */
     private void preloadHomeData() {
+        SharedPrefManager prefManager = new SharedPrefManager(this);
         ViewModelProvider.AndroidViewModelFactory factory = 
             new ViewModelProvider.AndroidViewModelFactory(getApplication());
+        
+        // 预加载天气数据（游客和正常登录都需要）
+        WeatherViewModel weatherViewModel = new ViewModelProvider(this, factory).get(WeatherViewModel.class);
+        String savedLocationId = weatherViewModel.getSavedLocationId();
+        if (savedLocationId != null && !savedLocationId.isEmpty()) {
+            weatherViewModel.loadWeatherData(savedLocationId);
+        }
+        
+        // 如果是正常登录，预加载个人资料和个人偏好
+        if (prefManager.isLoggedIn() && !prefManager.isGuestMode()) {
+            // 预加载个人资料（会自动应用个人偏好到穿搭广场）
+            ProfileViewModel profileViewModel = new ViewModelProvider(this).get(ProfileViewModel.class);
+            profileViewModel.loadProfile();
+        }
+        
+        // 开始加载穿搭广场数据（游客使用/api/outfits，正常登录根据个人偏好使用/api/discover/outfits）
         HomeViewModel homeViewModel = new ViewModelProvider(this, factory).get(HomeViewModel.class);
-        // 开始加载数据
         homeViewModel.loadData();
     }
 

@@ -46,8 +46,8 @@ public class ProfileFragment extends Fragment {
         setupObservers();
         updateUI();
         
-        // 如果已登录，加载个人资料
-        if (prefManager.isLoggedIn()) {
+        // 如果已登录且不是游客，加载个人资料
+        if (prefManager.isLoggedIn() && !prefManager.isGuestMode()) {
             profileViewModel.loadProfile();
         }
     }
@@ -87,6 +87,11 @@ public class ProfileFragment extends Fragment {
      */
     private void applyPreferencesToHome(com.example.outfitchanges.auth.model.ProfileResponse.Preferences preferences) {
         if (preferences == null) {
+            return;
+        }
+        
+        // 只有正常登录用户才能应用个人喜好
+        if (prefManager.isGuestMode() || !prefManager.isLoggedIn()) {
             return;
         }
         
@@ -134,8 +139,8 @@ public class ProfileFragment extends Fragment {
 
         MaterialCardView cardMyFavorites = rootView.findViewById(R.id.card_my_favorites);
         cardMyFavorites.setOnClickListener(v -> {
-            if (!prefManager.isLoggedIn()) {
-                Toast.makeText(getContext(), "请先登录", Toast.LENGTH_SHORT).show();
+            if (prefManager.isGuestMode() || !prefManager.isLoggedIn()) {
+                Toast.makeText(getContext(), "请先登录，才能查看我的收藏", Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(getActivity(), StartActivity.class);
                 startActivity(intent);
             } else {
@@ -148,8 +153,8 @@ public class ProfileFragment extends Fragment {
 
         MaterialCardView cardMyPosts = rootView.findViewById(R.id.card_my_posts);
         cardMyPosts.setOnClickListener(v -> {
-            if (!prefManager.isLoggedIn()) {
-                Toast.makeText(getContext(), "请先登录", Toast.LENGTH_SHORT).show();
+            if (prefManager.isGuestMode() || !prefManager.isLoggedIn()) {
+                Toast.makeText(getContext(), "请先登录，才能查看我的穿搭", Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(getActivity(), StartActivity.class);
                 startActivity(intent);
             } else {
@@ -162,8 +167,8 @@ public class ProfileFragment extends Fragment {
 
         MaterialCardView cardPreferences = rootView.findViewById(R.id.card_preferences);
         cardPreferences.setOnClickListener(v -> {
-            if (!prefManager.isLoggedIn()) {
-                Toast.makeText(getContext(), "请先登录", Toast.LENGTH_SHORT).show();
+            if (prefManager.isGuestMode() || !prefManager.isLoggedIn()) {
+                Toast.makeText(getContext(), "请先登录，才能设置个人偏好", Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(getActivity(), StartActivity.class);
                 startActivity(intent);
             } else {
@@ -185,13 +190,65 @@ public class ProfileFragment extends Fragment {
 
     private void updateUI() {
         boolean isLoggedIn = prefManager.isLoggedIn();
-        if (isLoggedIn) {
+        boolean isGuest = prefManager.isGuestMode();
+        
+        if (isGuest || !isLoggedIn) {
+            // 游客或未登录，显示"请先登录"
+            textUsername.setText("请先登录");
+            textLoginHint.setText("点击登录/编辑资料");
+            
+            // 禁用功能卡片
+            MaterialCardView cardMyFavorites = rootView.findViewById(R.id.card_my_favorites);
+            MaterialCardView cardMyPosts = rootView.findViewById(R.id.card_my_posts);
+            MaterialCardView cardPreferences = rootView.findViewById(R.id.card_preferences);
+            
+            if (cardMyFavorites != null) {
+                cardMyFavorites.setAlpha(0.5f);
+                cardMyFavorites.setClickable(false);
+            }
+            if (cardMyPosts != null) {
+                cardMyPosts.setAlpha(0.5f);
+                cardMyPosts.setClickable(false);
+            }
+            if (cardPreferences != null) {
+                cardPreferences.setAlpha(0.5f);
+                cardPreferences.setClickable(false);
+            }
+            
+            // 隐藏退出登录按钮
+            Button btnLogout = rootView.findViewById(R.id.btn_logout);
+            if (btnLogout != null) {
+                btnLogout.setVisibility(View.GONE);
+            }
+        } else {
+            // 正常登录
             String username = prefManager.getUsername();
             textUsername.setText(username.isEmpty() ? "用户" : username);
             textLoginHint.setText("点击编辑资料");
-        } else {
-            textUsername.setText("未登录");
-            textLoginHint.setText("点击登录/编辑资料");
+            
+            // 启用功能卡片
+            MaterialCardView cardMyFavorites = rootView.findViewById(R.id.card_my_favorites);
+            MaterialCardView cardMyPosts = rootView.findViewById(R.id.card_my_posts);
+            MaterialCardView cardPreferences = rootView.findViewById(R.id.card_preferences);
+            
+            if (cardMyFavorites != null) {
+                cardMyFavorites.setAlpha(1.0f);
+                cardMyFavorites.setClickable(true);
+            }
+            if (cardMyPosts != null) {
+                cardMyPosts.setAlpha(1.0f);
+                cardMyPosts.setClickable(true);
+            }
+            if (cardPreferences != null) {
+                cardPreferences.setAlpha(1.0f);
+                cardPreferences.setClickable(true);
+            }
+            
+            // 显示退出登录按钮
+            Button btnLogout = rootView.findViewById(R.id.btn_logout);
+            if (btnLogout != null) {
+                btnLogout.setVisibility(View.VISIBLE);
+            }
         }
     }
 

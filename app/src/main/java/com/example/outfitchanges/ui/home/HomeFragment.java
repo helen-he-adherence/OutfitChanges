@@ -148,8 +148,16 @@ public class HomeFragment extends Fragment {
 
     private void setupRecyclerView() {
         adapter = new HomeAdapter();
-        adapter.setOnFavoriteClickListener((outfitId, isCurrentlyFavorited) -> 
-            viewModel.toggleFavoriteOutfit(outfitId, isCurrentlyFavorited));
+        adapter.setOnFavoriteClickListener((outfitId, isCurrentlyFavorited) -> {
+            // 检查登录状态，游客不能收藏
+            com.example.outfitchanges.utils.SharedPrefManager prefManager = 
+                new com.example.outfitchanges.utils.SharedPrefManager(requireContext());
+            if (prefManager.isGuestMode() || !prefManager.isLoggedIn()) {
+                Toast.makeText(getContext(), "请先登录，才能收藏穿搭", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            viewModel.toggleFavoriteOutfit(outfitId, isCurrentlyFavorited);
+        });
         StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(adapter);

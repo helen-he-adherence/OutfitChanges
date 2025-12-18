@@ -9,6 +9,7 @@ public class SharedPrefManager {
     private static final String KEY_USERNAME = "username";
     private static final String KEY_EMAIL = "email";
     private static final String KEY_IS_LOGGED_IN = "is_logged_in";
+    private static final String KEY_IS_GUEST = "is_guest";
     private static final String KEY_GENDER = "gender";
     private static final String KEY_AGE = "age";
     private static final String KEY_OCCUPATION = "occupation";
@@ -105,6 +106,15 @@ public class SharedPrefManager {
 
     public String getToken() {
         return sharedPreferences.getString(KEY_TOKEN, "");
+    }
+
+    public void setGuestMode(boolean isGuest) {
+        editor.putBoolean(KEY_IS_GUEST, isGuest);
+        editor.apply();
+    }
+
+    public boolean isGuestMode() {
+        return sharedPreferences.getBoolean(KEY_IS_GUEST, false);
     }
 
     public void clear() {

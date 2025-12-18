@@ -352,10 +352,23 @@ public class HomeViewModel extends AndroidViewModel {
 
     /**
      * 旧版loadData方法（保持兼容性）
+     * 根据登录状态选择API：
+     * - 游客：使用 /api/outfits（不需要token）
+     * - 正常登录：如果有个人偏好，使用 /api/discover/outfits（需要token）
      */
     public void loadData() {
-        // 默认使用穿搭广场API
-        loadDiscoverOutfits();
+        // 检查登录状态
+        com.example.outfitchanges.utils.SharedPrefManager prefManager = 
+            new com.example.outfitchanges.utils.SharedPrefManager(getApplication());
+        
+        // 如果是游客，直接使用默认接口（不需要token）
+        if (prefManager.isGuestMode() || !prefManager.isLoggedIn()) {
+            loadDiscoverOutfits();
+        } else {
+            // 正常登录，如果有个人偏好会自动应用（通过ProfileFragment的applyPreferencesToHome）
+            // 如果没有个人偏好，使用默认接口
+            loadDiscoverOutfits();
+        }
     }
 
     public void updateKeyword(String keyword) {

@@ -275,9 +275,9 @@ public class PreferencesDialog extends Dialog {
             profileViewModel.getUpdateSuccessMessage().observe(lifecycleOwner, message -> {
                 if (message != null && !message.isEmpty() && isSaving) {
                     isSaving = false;
-                    // 保存成功后，重新加载个人资料（loadProfile会自动触发profile的更新）
-                    // 注意：这里不需要再次观察profile，因为loadProfile会触发更新
-                    profileViewModel.loadProfile();
+                    // 保存成功后，ProfileViewModel.updatePreferences() 已经会自动调用 loadProfile()
+                    // 所以这里不需要再次调用 loadProfile()，只需要等待 profile 更新即可
+                    // ProfileFragment 的观察者会自动检测到 profile 更新并应用到穿搭广场
                     if (listener != null) {
                         listener.onSaved();
                     }
