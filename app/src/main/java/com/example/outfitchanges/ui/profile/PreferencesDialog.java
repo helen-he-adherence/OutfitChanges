@@ -53,6 +53,13 @@ public class PreferencesDialog extends Dialog {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.dialog_preferences);
         setCancelable(true);
+        
+        // 设置弹窗宽度接近屏幕宽度
+        if (getWindow() != null) {
+            android.view.WindowManager.LayoutParams params = getWindow().getAttributes();
+            params.width = (int) (getContext().getResources().getDisplayMetrics().widthPixels * 0.9);
+            getWindow().setAttributes(params);
+        }
 
         initViews();
         setupChips();
@@ -63,12 +70,9 @@ public class PreferencesDialog extends Dialog {
     private void initViews() {
         chipGroupGender = findViewById(R.id.chip_group_gender);
         chipGroupStyle = findViewById(R.id.chip_group_style);
+        chipGroupColors = findViewById(R.id.chip_group_colors);
         editAge = findViewById(R.id.edit_age);
         editOccupation = findViewById(R.id.edit_occupation);
-        // 如果布局中有颜色选择，初始化它（可能不存在，findViewById 会返回 null）
-        // 注意：如果布局文件中没有 chip_group_colors，需要注释掉这行或添加该视图
-        chipGroupColors = null; // 暂时设置为 null，如果布局中有这个视图，取消注释下面这行
-        // chipGroupColors = findViewById(R.id.chip_group_colors);
     }
 
     private void setupChips() {
@@ -86,7 +90,7 @@ public class PreferencesDialog extends Dialog {
         }
 
         // 风格选项
-        String[] styles = {"简约", "甜美", "优雅", "街头", "复古", "通勤", "休闲"};
+        String[] styles = {"休闲", "通勤", "街头", "优雅", "甜美", "复古", "运动", "民族风", "简约", "奢华", "森系", "朋克", "商务", "度假风"};
         for (String style : styles) {
             Chip chip = new Chip(getContext());
             chip.setText(style);
@@ -98,23 +102,124 @@ public class PreferencesDialog extends Dialog {
             chipGroupStyle.addView(chip);
         }
         
-        // 颜色选项（如果存在）
-        if (chipGroupColors != null) {
-            String[] colors = {"黑色", "白色", "灰色", "红色", "蓝色", "绿色", "黄色", "粉色"};
-            for (String color : colors) {
-                Chip chip = new Chip(getContext());
-                chip.setText(color);
-                chip.setCheckable(true);
-                chip.setChipBackgroundColorResource(R.color.chip_bg_color);
-                chip.setChipStrokeColorResource(R.color.gray_button_bg);
-                chip.setChipStrokeWidth(1);
-                chip.setTextColor(getContext().getColorStateList(R.color.chip_text_color));
-                chipGroupColors.addView(chip);
-            }
+        // 颜色选项
+        String[] colors = {"黑色", "白色", "灰色", "红色", "蓝色", "绿色", "黄色", "粉色", "紫色", "橙色", "棕色", "青色"};
+        for (String color : colors) {
+            Chip chip = new Chip(getContext());
+            chip.setText(color);
+            chip.setCheckable(true);
+            chip.setChipBackgroundColorResource(R.color.chip_bg_color);
+            chip.setChipStrokeColorResource(R.color.gray_button_bg);
+            chip.setChipStrokeWidth(1);
+            chip.setTextColor(getContext().getColorStateList(R.color.chip_text_color));
+            chipGroupColors.addView(chip);
         }
     }
 
     private void loadSavedPreferences() {
+        // 如果设置了 ViewModel 且已登录，尝试从服务器加载
+        if (profileViewModel != null && prefManager.isLoggedIn()) {
+            // 先检查是否已有缓存的profile数据
+            com.example.outfitchanges.auth.model.ProfileResponse.Profile cachedProfile = 
+                profileViewModel.getProfile().getValue();
+            if (cachedProfile != null && cachedProfile.getPreferences() != null) {
+                loadPreferencesFromProfile(cachedProfile);
+            } else {
+                // 如果没有缓存，观察一次并加载
+                profileViewModel.getProfile().observe(lifecycleOwner, profile -> {
+                    if (profile != null && profile.getPreferences() != null) {
+                        loadPreferencesFromProfile(profile);
+                    } else {
+                        // 如果服务器没有数据，从本地加载
+                        loadPreferencesFromLocal();
+                    }
+                });
+                // 触发加载个人资料
+                profileViewModel.loadProfile();
+            }
+        } else {
+            // 未登录或没有 ViewModel，从本地加载
+            loadPreferencesFromLocal();
+        }
+    }
+    
+    private void loadPreferencesFromProfile(com.example.outfitchanges.auth.model.ProfileResponse.Profile profile) {
+        // 先清空所有选择
+        clearAllSelections();
+        
+        // 加载性别
+        if (profile.getGender() != null && !profile.getGender().isEmpty()) {
+            for (int i = 0; i < chipGroupGender.getChildCount(); i++) {
+                Chip chip = (Chip) chipGroupGender.getChildAt(i);
+                if (chip.getText().toString().equals(profile.getGender())) {
+                    chip.setChecked(true);
+                    break;
+                }
+            }
+        }
+        
+        // 加载年龄
+        if (profile.getAge() != null) {
+            editAge.setText(String.valueOf(profile.getAge()));
+        } else {
+            editAge.setText("");
+        }
+        
+        // 加载职业
+        if (profile.getOccupation() != null && !profile.getOccupation().isEmpty()) {
+            editOccupation.setText(profile.getOccupation());
+        } else {
+            editOccupation.setText("");
+        }
+        
+        // 加载偏好风格
+        if (profile.getPreferences() != null && profile.getPreferences().getPreferredStyles() != null) {
+            for (String style : profile.getPreferences().getPreferredStyles()) {
+                for (int i = 0; i < chipGroupStyle.getChildCount(); i++) {
+                    Chip chip = (Chip) chipGroupStyle.getChildAt(i);
+                    if (chip.getText().toString().equals(style)) {
+                        chip.setChecked(true);
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // 加载喜欢的颜色
+        if (profile.getPreferences() != null && profile.getPreferences().getPreferredColors() != null) {
+            for (String color : profile.getPreferences().getPreferredColors()) {
+                for (int i = 0; i < chipGroupColors.getChildCount(); i++) {
+                    Chip chip = (Chip) chipGroupColors.getChildAt(i);
+                    if (chip.getText().toString().equals(color)) {
+                        chip.setChecked(true);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    
+    private void clearAllSelections() {
+        // 清空性别选择
+        for (int i = 0; i < chipGroupGender.getChildCount(); i++) {
+            Chip chip = (Chip) chipGroupGender.getChildAt(i);
+            chip.setChecked(false);
+        }
+        
+        // 清空风格选择
+        for (int i = 0; i < chipGroupStyle.getChildCount(); i++) {
+            Chip chip = (Chip) chipGroupStyle.getChildAt(i);
+            chip.setChecked(false);
+        }
+        
+        // 清空颜色选择
+        for (int i = 0; i < chipGroupColors.getChildCount(); i++) {
+            Chip chip = (Chip) chipGroupColors.getChildAt(i);
+            chip.setChecked(false);
+        }
+    }
+    
+    private void loadPreferencesFromLocal() {
         String savedGender = prefManager.getGender();
         String savedAge = prefManager.getAge();
         String savedOccupation = prefManager.getOccupation();
@@ -170,6 +275,9 @@ public class PreferencesDialog extends Dialog {
             profileViewModel.getUpdateSuccessMessage().observe(lifecycleOwner, message -> {
                 if (message != null && !message.isEmpty() && isSaving) {
                     isSaving = false;
+                    // 保存成功后，重新加载个人资料（loadProfile会自动触发profile的更新）
+                    // 注意：这里不需要再次观察profile，因为loadProfile会触发更新
+                    profileViewModel.loadProfile();
                     if (listener != null) {
                         listener.onSaved();
                     }
@@ -227,12 +335,10 @@ public class PreferencesDialog extends Dialog {
         
         // 收集偏好颜色
         List<String> preferredColors = new ArrayList<>();
-        if (chipGroupColors != null) {
-            for (int i = 0; i < chipGroupColors.getChildCount(); i++) {
-                Chip chip = (Chip) chipGroupColors.getChildAt(i);
-                if (chip.isChecked()) {
-                    preferredColors.add(chip.getText().toString());
-                }
+        for (int i = 0; i < chipGroupColors.getChildCount(); i++) {
+            Chip chip = (Chip) chipGroupColors.getChildAt(i);
+            if (chip.isChecked()) {
+                preferredColors.add(chip.getText().toString());
             }
         }
 

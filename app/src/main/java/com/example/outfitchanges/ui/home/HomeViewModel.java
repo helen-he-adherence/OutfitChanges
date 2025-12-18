@@ -388,6 +388,79 @@ public class HomeViewModel extends AndroidViewModel {
     }
 
     /**
+     * 应用个人喜好筛选
+     * @param preferences 个人喜好设置
+     */
+    public void applyUserPreferences(com.example.outfitchanges.auth.model.ProfileResponse.Preferences preferences) {
+        if (preferences == null) {
+            return;
+        }
+        
+        // 清空现有筛选
+        for (Set<String> set : selectedFilters.values()) {
+            set.clear();
+        }
+        
+        // 应用偏好风格
+        if (preferences.getPreferredStyles() != null && preferences.getPreferredStyles().length > 0) {
+            Set<String> styleSet = selectedFilters.get("style");
+            if (styleSet != null) {
+                for (String style : preferences.getPreferredStyles()) {
+                    styleSet.add(style);
+                }
+            }
+        }
+        
+        // 应用偏好颜色
+        if (preferences.getPreferredColors() != null && preferences.getPreferredColors().length > 0) {
+            Set<String> colorSet = selectedFilters.get("color");
+            if (colorSet != null) {
+                for (String color : preferences.getPreferredColors()) {
+                    colorSet.add(color);
+                }
+            }
+        }
+        
+        // 应用偏好季节
+        if (preferences.getPreferredSeasons() != null && preferences.getPreferredSeasons().length > 0) {
+            Set<String> seasonSet = selectedFilters.get("season");
+            if (seasonSet != null) {
+                for (String season : preferences.getPreferredSeasons()) {
+                    // 将API返回的季节值转换为UI显示的值
+                    String uiSeason = mapSeasonToUI(season);
+                    if (uiSeason != null) {
+                        seasonSet.add(uiSeason);
+                    }
+                }
+            }
+        }
+        
+        // 立即清空列表，避免显示旧数据
+        filteredOutfits.postValue(new ArrayList<>());
+        // 重新加载数据（带个人喜好筛选）
+        loadDiscoverOutfits(0);
+    }
+    
+    /**
+     * 将API返回的季节值映射为UI显示的值
+     */
+    private String mapSeasonToUI(String season) {
+        if (season == null) return null;
+        switch (season) {
+            case "春":
+                return "春季";
+            case "夏":
+                return "夏季";
+            case "秋":
+                return "秋季";
+            case "冬":
+                return "冬季";
+            default:
+                return season;
+        }
+    }
+
+    /**
      * 切换收藏状态（通过imageUrl，兼容旧代码）
      * 新代码应该使用toggleFavoriteOutfit(int outfitId, boolean isCurrentlyFavorited)
      */

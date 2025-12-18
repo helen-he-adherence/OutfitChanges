@@ -59,6 +59,11 @@ public class ProfileFragment extends Fragment {
                 textUsername.setText(profile.getUsername() != null ? profile.getUsername() : "用户");
                 textLoginHint.setText("点击编辑资料");
                 // 可以在这里加载头像等
+                
+                // 检查是否有个人喜好设置，如果有，应用到穿搭广场
+                if (profile.getPreferences() != null) {
+                    applyPreferencesToHome(profile.getPreferences());
+                }
             }
         });
         
@@ -75,6 +80,37 @@ public class ProfileFragment extends Fragment {
                 Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
             }
         });
+    }
+    
+    /**
+     * 将个人喜好应用到穿搭广场
+     */
+    private void applyPreferencesToHome(com.example.outfitchanges.auth.model.ProfileResponse.Preferences preferences) {
+        if (preferences == null) {
+            return;
+        }
+        
+        // 检查是否有任何偏好设置
+        boolean hasPreferences = false;
+        if (preferences.getPreferredStyles() != null && preferences.getPreferredStyles().length > 0) {
+            hasPreferences = true;
+        }
+        if (preferences.getPreferredColors() != null && preferences.getPreferredColors().length > 0) {
+            hasPreferences = true;
+        }
+        if (preferences.getPreferredSeasons() != null && preferences.getPreferredSeasons().length > 0) {
+            hasPreferences = true;
+        }
+        
+        if (hasPreferences && getActivity() != null) {
+            // 获取HomeViewModel并应用个人喜好
+            androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory factory = 
+                new androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory(getActivity().getApplication());
+            com.example.outfitchanges.ui.home.HomeViewModel homeViewModel = 
+                new androidx.lifecycle.ViewModelProvider(getActivity(), factory)
+                    .get(com.example.outfitchanges.ui.home.HomeViewModel.class);
+            homeViewModel.applyUserPreferences(preferences);
+        }
     }
 
     private void initViews(View view) {

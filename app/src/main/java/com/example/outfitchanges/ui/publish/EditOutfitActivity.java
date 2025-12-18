@@ -42,6 +42,7 @@ public class EditOutfitActivity extends AppCompatActivity {
     private ChipGroup chipGroupOverallStyle;
     private ChipGroup chipGroupOccasion;
     private ChipGroup chipGroupSeason;
+    private ChipGroup chipGroupWeather;
     private LinearLayout layoutItemsContainer;
     private LinearLayout btnAddItem;
     private ProgressBar progressUpload;
@@ -120,6 +121,7 @@ public class EditOutfitActivity extends AppCompatActivity {
         chipGroupOverallStyle = findViewById(R.id.chip_group_overall_style);
         chipGroupOccasion = findViewById(R.id.chip_group_occasion);
         chipGroupSeason = findViewById(R.id.chip_group_season);
+        chipGroupWeather = findViewById(R.id.chip_group_weather);
         layoutItemsContainer = findViewById(R.id.layout_items_container);
         btnAddItem = findViewById(R.id.btn_add_item);
         progressUpload = findViewById(R.id.progress_upload);
@@ -201,6 +203,9 @@ public class EditOutfitActivity extends AppCompatActivity {
         
         // 加载适用季节标签
         loadTagChips(chipGroupSeason, modifiedTags.getSeason(), true);
+        
+        // 加载适合的天气标签
+        loadTagChips(chipGroupWeather, modifiedTags.getWeather(), true);
     }
     
     private void loadTagChips(ChipGroup chipGroup, List<String> tags, boolean canAdd) {
@@ -428,6 +433,9 @@ public class EditOutfitActivity extends AppCompatActivity {
         
         // 收集适用季节
         tags.setSeason(getTagsFromChipGroup(chipGroupSeason));
+        
+        // 收集适合的天气
+        tags.setWeather(getTagsFromChipGroup(chipGroupWeather));
         
         // 收集单品列表
         List<OutfitClothingItem> items = new ArrayList<>();

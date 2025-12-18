@@ -37,6 +37,7 @@
             android:layout_marginEnd="32dp"
             android:background="@drawable/edit_text_background"
             android:hint="请输入单品类型"
+            android:inputType="text"
             android:padding="12dp"
             android:textColor="@color/text_primary"
             android:textSize="14sp" />

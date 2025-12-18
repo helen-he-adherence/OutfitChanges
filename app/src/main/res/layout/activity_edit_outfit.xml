@@ -163,6 +163,24 @@
                         app:chipSpacing="8dp"
                         app:singleLine="false" />
 
+                    <!-- 适合的天气 -->
+                    <TextView
+                        android:id="@+id/text_weather_label"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="适合的天气"
+                        android:textColor="@color/text_primary"
+                        android:textSize="16sp" />
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/chip_group_weather"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        app:chipSpacing="8dp"
+                        app:singleLine="false" />
+
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
