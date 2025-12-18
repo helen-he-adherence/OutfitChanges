@@ -50,6 +50,15 @@ public class MyPostsActivity extends AppCompatActivity {
     private void setupRecyclerView() {
         recyclerView = findViewById(R.id.recycler_view);
         adapter = new HomeAdapter();
+        // 设置收藏点击监听器，在我的发布中可以收藏/取消收藏
+        adapter.setOnFavoriteClickListener((outfitId, isCurrentlyFavorited) -> {
+            // 使用HomeViewModel来切换收藏状态
+            com.example.outfitchanges.ui.home.HomeViewModel homeViewModel = 
+                new ViewModelProvider(this).get(com.example.outfitchanges.ui.home.HomeViewModel.class);
+            homeViewModel.toggleFavoriteOutfit(outfitId, isCurrentlyFavorited);
+            // 重新加载我的发布列表以更新收藏状态
+            viewModel.loadUserOutfits();
+        });
         StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(adapter);
@@ -95,9 +104,15 @@ public class MyPostsActivity extends AppCompatActivity {
         }
 
         String owner = "我的穿搭";
-        int likes = 0; // OutfitItem可能没有likes字段，使用默认值
+        int likes = item.getLikes() != null ? item.getLikes() : 0;
 
         OutfitDisplayModel model = new OutfitDisplayModel(item.getImageUrl(), mergedTags, owner, likes);
+        if (item.getId() != null) {
+            model.setOutfitId(item.getId());
+        }
+        if (item.getIsFavorited() != null) {
+            model.setFavorite(item.getIsFavorited());
+        }
         return model;
     }
 

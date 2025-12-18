@@ -41,7 +41,7 @@ public class FavoritesResponse {
         private Object rawTags; // 可以是任意JSON对象
 
         @SerializedName("is_modified")
-        private boolean isModified;
+        private Object isModified; // 可能是Boolean、Integer或null
 
         @SerializedName("likes")
         private int likes;
@@ -90,11 +90,23 @@ public class FavoritesResponse {
             this.rawTags = rawTags;
         }
 
+        /**
+         * 获取是否已修改（处理数字和布尔值两种情况）
+         */
         public boolean isModified() {
-            return isModified;
+            if (isModified == null) {
+                return false;
+            }
+            if (isModified instanceof Boolean) {
+                return (Boolean) isModified;
+            }
+            if (isModified instanceof Number) {
+                return ((Number) isModified).intValue() != 0;
+            }
+            return false;
         }
 
-        public void setModified(boolean modified) {
+        public void setModified(Object modified) {
             isModified = modified;
         }
 

@@ -20,7 +20,7 @@ import java.util.List;
 public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
 
     public interface OnFavoriteClickListener {
-        void onFavoriteClick(String imageUrl);
+        void onFavoriteClick(int outfitId, boolean isCurrentlyFavorited);
     }
 
     public interface OnItemClickListener {
@@ -106,7 +106,7 @@ public class HomeAdapter extends RecyclerView.Adapter<HomeAdapter.ViewHolder> {
 
             favoriteButton.setOnClickListener(v -> {
                 if (favoriteListener != null) {
-                    favoriteListener.onFavoriteClick(model.getImageUrl());
+                    favoriteListener.onFavoriteClick(model.getOutfitId(), model.isFavorite());
                 }
             });
 

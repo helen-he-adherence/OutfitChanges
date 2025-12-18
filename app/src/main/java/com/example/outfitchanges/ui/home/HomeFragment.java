@@ -148,7 +148,8 @@ public class HomeFragment extends Fragment {
 
     private void setupRecyclerView() {
         adapter = new HomeAdapter();
-        adapter.setOnFavoriteClickListener(imageUrl -> viewModel.toggleFavorite(imageUrl));
+        adapter.setOnFavoriteClickListener((outfitId, isCurrentlyFavorited) -> 
+            viewModel.toggleFavoriteOutfit(outfitId, isCurrentlyFavorited));
         StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(adapter);
