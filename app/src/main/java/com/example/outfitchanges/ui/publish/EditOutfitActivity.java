@@ -141,9 +141,6 @@ public class EditOutfitActivity extends AppCompatActivity {
         // 返回按钮
         findViewById(R.id.btn_back).setOnClickListener(v -> showCancelDialog());
         
-        // 工具栏发布按钮
-        findViewById(R.id.btn_publish_toolbar).setOnClickListener(v -> publishOutfit());
-        
         // 底部发布按钮
         findViewById(R.id.btn_publish).setOnClickListener(v -> publishOutfit());
     }
@@ -170,7 +167,6 @@ public class EditOutfitActivity extends AppCompatActivity {
         viewModel.getIsLoading().observe(this, isLoading -> {
             progressUpload.setVisibility(isLoading ? View.VISIBLE : View.GONE);
             findViewById(R.id.btn_publish).setEnabled(!isLoading);
-            findViewById(R.id.btn_publish_toolbar).setEnabled(!isLoading);
         });
     }
     

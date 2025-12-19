@@ -25,6 +25,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.example.outfitchanges.R;
 import com.example.outfitchanges.ui.home.adapter.HomeAdapter;
 import com.example.outfitchanges.ui.home.model.OutfitDisplayModel;
@@ -51,11 +52,11 @@ public class HomeFragment extends Fragment {
     private View filterDrawer;
     private EditText inputSearch;
     private View loadingContainer;
+    private SwipeRefreshLayout swipeRefreshLayout;
     private final Map<String, Set<String>> localFilters = new HashMap<>();
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 2001;
 
     private final String[] seasons = {"春季", "夏季", "秋季", "冬季"};
-    private final String[] weathers = {"晴天", "多云", "下雨", "下雪"};
     private final String[] scenes = {"上班", "约会", "聚餐", "运动", "旅行"};
     private final String[] styles = {"简约", "甜美", "优雅", "街头", "复古"};
     private final String[] categories = {"夹克", "牛仔裤", "连衣裙", "外套", "配饰", "吊带/背心", "西装"};
@@ -91,15 +92,14 @@ public class HomeFragment extends Fragment {
         if ((currentData == null || currentData.isEmpty()) && (isLoading == null || !isLoading)) {
             viewModel.loadData();
         }
-        // 移除天气相关的自动筛选
-        // observeWeather();
-        // triggerWeatherLoadIfNeeded();
-        // tryStartLocate();
+        
+        // 观察天气数据，自动应用天气筛选
+        observeWeather();
+        triggerWeatherLoadIfNeeded();
     }
 
     private void initLocalFilters() {
         localFilters.put("season", new HashSet<>());
-        localFilters.put("weather", new HashSet<>());
         localFilters.put("scene", new HashSet<>());
         localFilters.put("style", new HashSet<>());
         localFilters.put("category", new HashSet<>());
@@ -112,16 +112,25 @@ public class HomeFragment extends Fragment {
         recyclerView = view.findViewById(R.id.recycler_view);
         inputSearch = view.findViewById(R.id.input_search);
         loadingContainer = view.findViewById(R.id.loading_container);
+        swipeRefreshLayout = view.findViewById(R.id.swipe_refresh);
         MaterialCardView btnFilter = view.findViewById(R.id.btn_filter);
         ImageButton btnCloseFilter = view.findViewById(R.id.btn_close_filter);
         Button btnClearFilters = view.findViewById(R.id.btn_clear_filters);
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
+        
+        // 设置下拉刷新
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            // 重新加载数据
+            viewModel.loadData();
+        });
+        
+        // 设置下拉刷新的颜色
+        swipeRefreshLayout.setColorSchemeResources(R.color.primary_color);
 
         btnFilter.setOnClickListener(v -> drawerLayout.openDrawer(Gravity.END));
         btnCloseFilter.setOnClickListener(v -> drawerLayout.closeDrawer(GravityCompat.END));
         btnClearFilters.setOnClickListener(v -> {
             clearAllChipSelections((ChipGroup) view.findViewById(R.id.chip_group_season));
-            clearAllChipSelections((ChipGroup) view.findViewById(R.id.chip_group_weather));
             clearAllChipSelections((ChipGroup) view.findViewById(R.id.chip_group_scene));
             clearAllChipSelections((ChipGroup) view.findViewById(R.id.chip_group_style));
             clearAllChipSelections((ChipGroup) view.findViewById(R.id.chip_group_category));
@@ -165,7 +174,6 @@ public class HomeFragment extends Fragment {
 
     private void setupFilters(View root) {
         createFilterChips((ChipGroup) root.findViewById(R.id.chip_group_season), "season", seasons);
-        createFilterChips((ChipGroup) root.findViewById(R.id.chip_group_weather), "weather", weathers);
         createFilterChips((ChipGroup) root.findViewById(R.id.chip_group_scene), "scene", scenes);
         createFilterChips((ChipGroup) root.findViewById(R.id.chip_group_style), "style", styles);
         createFilterChips((ChipGroup) root.findViewById(R.id.chip_group_category), "category", categories);
@@ -191,27 +199,43 @@ public class HomeFragment extends Fragment {
                 // 加载完成，隐藏加载动画，显示列表
                 loadingContainer.setVisibility(View.GONE);
                 recyclerView.setVisibility(View.VISIBLE);
+                // 停止下拉刷新动画
+                if (swipeRefreshLayout != null) {
+                    swipeRefreshLayout.setRefreshing(false);
+                }
             }
         });
 
         viewModel.getError().observe(getViewLifecycleOwner(), message -> {
             if (message != null && !message.isEmpty()) {
                 Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+                // 如果出错，也要停止下拉刷新动画
+                if (swipeRefreshLayout != null) {
+                    swipeRefreshLayout.setRefreshing(false);
+                }
             }
         });
     }
 
-    // 已移除天气相关的自动筛选功能
-    // private void observeWeather() {
-    //     weatherViewModel.getCurrentWeather().observe(getViewLifecycleOwner(), now -> {
-    //         viewModel.applyWeatherDefaults(now);
-    //     });
-    // }
+    /**
+     * 观察天气数据，自动应用天气筛选
+     */
+    private void observeWeather() {
+        weatherViewModel.getCurrentWeather().observe(getViewLifecycleOwner(), now -> {
+            if (now != null) {
+                // 根据温度自动应用天气筛选
+                viewModel.applyWeatherFilter(now);
+            }
+        });
+    }
 
     private void triggerWeatherLoadIfNeeded() {
         String locationId = weatherViewModel.getSavedLocationId();
         if (locationId != null && !locationId.isEmpty()) {
             weatherViewModel.loadWeatherData(locationId);
+        } else {
+            // 如果没有保存的位置，尝试获取当前位置
+            tryStartLocate();
         }
     }
 

@@ -10,6 +10,8 @@ import com.example.outfitchanges.ui.home.model.OutfitDisplayModel;
 import com.example.outfitchanges.ui.home.model.OutfitItem;
 import com.example.outfitchanges.ui.home.model.OutfitListResponse;
 import com.example.outfitchanges.ui.home.model.OutfitTags;
+import com.example.outfitchanges.ui.weather.WeatherViewModel;
+import com.example.outfitchanges.ui.weather.model.WeatherResponse;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -26,9 +28,9 @@ public class HomeViewModel extends AndroidViewModel {
         super(application);
         repository = new OutfitRepository(application);
         
-        // 初始化筛选器
+        // 初始化筛选器（天气筛选已移除，改为自动根据温度判断）
         selectedFilters.put("season", new HashSet<>());
-        selectedFilters.put("weather", new HashSet<>());
+        selectedFilters.put("weather", new HashSet<>()); // 保留weather筛选器，但由天气数据自动填充
         selectedFilters.put("scene", new HashSet<>());
         selectedFilters.put("style", new HashSet<>());
         selectedFilters.put("category", new HashSet<>());
@@ -326,18 +328,18 @@ public class HomeViewModel extends AndroidViewModel {
 
     /**
      * 从OutfitListItem转换为OutfitDisplayModel
+     * 只显示整体风格、适用场合、适合天气标签
      */
     private OutfitDisplayModel toDisplayModelFromListItem(OutfitListResponse.OutfitListItem item) {
         OutfitTags tags = item.getTags();
         List<String> mergedTags = new ArrayList<>();
 
         if (tags != null) {
-            addLimited(mergedTags, tags.getSeason(), 1);
+            // 只显示整体风格、适用场合、适合天气
             addLimited(mergedTags, tags.getOverallStyle(), 2);
             addLimited(mergedTags, tags.getOccasion(), 1);
-            addLimited(mergedTags, tags.getAllCategories(), 2);
-            addLimited(mergedTags, tags.getAllColors(), 1);
             addLimited(mergedTags, tags.getWeather(), 1);
+            // 删除季节和颜色标签
         }
 
         String owner = "用户 " + item.getUserId();
@@ -409,9 +411,25 @@ public class HomeViewModel extends AndroidViewModel {
             return;
         }
         
-        // 清空现有筛选
-        for (Set<String> set : selectedFilters.values()) {
-            set.clear();
+        // 清空现有筛选（但保留天气筛选，因为天气筛选是自动的）
+        Set<String> weatherFilter = selectedFilters.get("weather");
+        String savedWeather = null;
+        if (weatherFilter != null && !weatherFilter.isEmpty()) {
+            // 保存当前的天气筛选
+            savedWeather = weatherFilter.iterator().next();
+        }
+        
+        // 清空除天气外的其他筛选
+        for (Map.Entry<String, Set<String>> entry : selectedFilters.entrySet()) {
+            if (!"weather".equals(entry.getKey())) {
+                entry.getValue().clear();
+            }
+        }
+        
+        // 恢复天气筛选
+        if (savedWeather != null && weatherFilter != null) {
+            weatherFilter.clear();
+            weatherFilter.add(savedWeather);
         }
         
         // 应用偏好风格
@@ -470,6 +488,69 @@ public class HomeViewModel extends AndroidViewModel {
                 return "冬季";
             default:
                 return season;
+        }
+    }
+    
+    /**
+     * 根据温度判断天气类型
+     * @param temp 温度值（字符串，可能包含"°C"）
+     * @return 天气类型：寒冷、凉爽、温暖、炎热
+     */
+    private String getWeatherTypeFromTemp(String temp) {
+        if (temp == null || temp.isEmpty()) {
+            return null;
+        }
+        
+        try {
+            // 移除可能的"°C"后缀和空格
+            String tempStr = temp.replace("°C", "").replace("°", "").trim();
+            double temperature = Double.parseDouble(tempStr);
+            
+            if (temperature < 10) {
+                return "寒冷";
+            } else if (temperature < 20) {
+                return "凉爽";
+            } else if (temperature < 28) {
+                return "温暖";
+            } else {
+                return "炎热";
+            }
+        } catch (NumberFormatException e) {
+            android.util.Log.e("HomeViewModel", "无法解析温度: " + temp, e);
+            return null;
+        }
+    }
+    
+    /**
+     * 根据天气数据自动应用天气筛选
+     * @param nowWeather 当前天气数据
+     */
+    public void applyWeatherFilter(WeatherResponse.NowWeather nowWeather) {
+        if (nowWeather == null) {
+            return;
+        }
+        
+        String temp = nowWeather.getTemp();
+        String weatherType = getWeatherTypeFromTemp(temp);
+        
+        if (weatherType != null) {
+            // 更新天气筛选（不清空其他筛选条件，如个人偏好）
+            Set<String> weatherSet = selectedFilters.get("weather");
+            if (weatherSet != null) {
+                // 检查是否已经有相同的天气类型，避免重复加载
+                if (weatherSet.size() == 1 && weatherSet.contains(weatherType)) {
+                    // 天气类型没有变化，不需要重新加载
+                    return;
+                }
+                
+                weatherSet.clear();
+                weatherSet.add(weatherType);
+                
+                // 立即清空列表，避免显示旧数据
+                filteredOutfits.postValue(new ArrayList<>());
+                // 重新加载数据（带天气筛选，同时保留其他筛选条件如个人偏好）
+                loadDiscoverOutfits(0);
+            }
         }
     }
 

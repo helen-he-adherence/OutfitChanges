@@ -56,6 +56,15 @@ public class MainActivity extends AppCompatActivity {
         
         // 预加载天气数据（游客和正常登录都需要）
         WeatherViewModel weatherViewModel = new ViewModelProvider(this, factory).get(WeatherViewModel.class);
+        HomeViewModel homeViewModel = new ViewModelProvider(this, factory).get(HomeViewModel.class);
+        
+        // 观察天气数据，自动应用天气筛选到穿搭广场
+        weatherViewModel.getCurrentWeather().observe(this, nowWeather -> {
+            if (nowWeather != null) {
+                homeViewModel.applyWeatherFilter(nowWeather);
+            }
+        });
+        
         String savedLocationId = weatherViewModel.getSavedLocationId();
         if (savedLocationId != null && !savedLocationId.isEmpty()) {
             weatherViewModel.loadWeatherData(savedLocationId);
@@ -69,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
         }
         
         // 开始加载穿搭广场数据（游客使用/api/outfits，正常登录根据个人偏好使用/api/discover/outfits）
-        HomeViewModel homeViewModel = new ViewModelProvider(this, factory).get(HomeViewModel.class);
+        // 注意：天气筛选会在天气数据加载后自动应用
         homeViewModel.loadData();
     }
 

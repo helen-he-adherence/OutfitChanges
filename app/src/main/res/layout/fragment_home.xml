@@ -83,8 +83,8 @@
                     android:gravity="center">
 
                     <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
                         android:src="@drawable/ic_filter"
                         android:tint="@color/text_primary" />
                 </FrameLayout>
@@ -98,13 +98,20 @@
             android:layout_height="0dp"
             android:layout_weight="1">
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recycler_view"
+            <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+                android:id="@+id/swipe_refresh"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:clipToPadding="false"
-                android:paddingBottom="12dp"
-                android:paddingHorizontal="2dp" />
+                android:layout_height="match_parent">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recycler_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clipToPadding="false"
+                    android:paddingBottom="12dp"
+                    android:paddingHorizontal="2dp" />
+
+            </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
             <!-- 加载指示器 -->
             <FrameLayout
@@ -183,24 +190,6 @@
 
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/chip_group_season"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:chipSpacingHorizontal="8dp"
-                app:chipSpacingVertical="8dp"
-                app:singleLine="false" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="8dp"
-                android:text="天气"
-                android:textColor="@color/text_primary"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/chip_group_weather"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:chipSpacingHorizontal="8dp"

@@ -24,7 +24,7 @@
                 android:layout_height="wrap_content"
                 android:adjustViewBounds="true"
                 android:minHeight="200dp"
-                android:scaleType="centerCrop"
+                android:scaleType="fitCenter"
                 android:background="@color/gray_button_bg" />
 
             <com.google.android.material.card.MaterialCardView
@@ -95,5 +95,6 @@
     </LinearLayout>
 
 </com.google.android.material.card.MaterialCardView>
+
 
 
