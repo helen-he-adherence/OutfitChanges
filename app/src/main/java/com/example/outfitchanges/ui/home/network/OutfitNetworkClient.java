@@ -12,6 +12,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 简单的网络客户端，暂时容忍自签名证书，便于拉取自建服务数据。
@@ -96,6 +97,9 @@ public class OutfitNetworkClient {
                     .hostnameVerifier(allHostsValid)
                     .addInterceptor(tokenInterceptor) // 先添加 token 拦截器
                     .addInterceptor(loggingInterceptor) // 再添加日志拦截器
+                    .connectTimeout(30, TimeUnit.SECONDS) // 连接超时30秒
+                    .readTimeout(30, TimeUnit.SECONDS) // 读取超时30秒
+                    .writeTimeout(30, TimeUnit.SECONDS) // 写入超时30秒
                     .build();
         } catch (Exception e) {
             return new OkHttpClient();

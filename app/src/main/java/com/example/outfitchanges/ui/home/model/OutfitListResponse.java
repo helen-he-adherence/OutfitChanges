@@ -90,6 +90,9 @@ public class OutfitListResponse {
         @SerializedName("is_favorited")
         private Object isFavorited; // 可能是Boolean、Integer或null（未登录用户）
 
+        @SerializedName("sex")
+        private String sex;
+
         public int getId() {
             return id;
         }
@@ -193,6 +196,14 @@ public class OutfitListResponse {
         public void setIsFavorited(Object favorited) {
             isFavorited = favorited;
         }
+
+        public String getSex() {
+            return sex;
+        }
+
+        public void setSex(String sex) {
+            this.sex = sex;
+        }
     }
 
     public static class Pagination {
@@ -260,6 +271,9 @@ public class OutfitListResponse {
         @SerializedName("color")
         private List<String> color;
 
+        @SerializedName("sex")
+        private List<String> sex;
+
         public List<String> getSeason() {
             return season;
         }
@@ -306,6 +320,14 @@ public class OutfitListResponse {
 
         public void setColor(List<String> color) {
             this.color = color;
+        }
+
+        public List<String> getSex() {
+            return sex;
+        }
+
+        public void setSex(List<String> sex) {
+            this.sex = sex;
         }
     }
 }

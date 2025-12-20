@@ -60,7 +60,13 @@ public class ProfileFragment extends Fragment {
                 textLoginHint.setText("点击编辑资料");
                 // 可以在这里加载头像等
                 
+                // 应用用户性别筛选（优先应用，因为这是基础筛选）
+                if (profile.getGender() != null && !profile.getGender().isEmpty()) {
+                    applyGenderToHome(profile.getGender());
+                }
+                
                 // 检查是否有个人喜好设置，如果有，应用到穿搭广场
+                // 注意：个人偏好会在性别筛选之后应用，这样可以组合筛选
                 if (profile.getPreferences() != null) {
                     applyPreferencesToHome(profile.getPreferences());
                 }
@@ -115,6 +121,45 @@ public class ProfileFragment extends Fragment {
                 new androidx.lifecycle.ViewModelProvider(getActivity(), factory)
                     .get(com.example.outfitchanges.ui.home.HomeViewModel.class);
             homeViewModel.applyUserPreferences(preferences);
+        }
+    }
+    
+    /**
+     * 将用户性别应用到穿搭广场筛选
+     */
+    private void applyGenderToHome(String gender) {
+        if (gender == null || gender.isEmpty()) {
+            return;
+        }
+        
+        // 只有正常登录用户才能应用性别筛选
+        if (prefManager.isGuestMode() || !prefManager.isLoggedIn()) {
+            return;
+        }
+        
+        if (getActivity() != null) {
+            // 获取HomeViewModel并应用性别筛选
+            androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory factory = 
+                new androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory(getActivity().getApplication());
+            com.example.outfitchanges.ui.home.HomeViewModel homeViewModel = 
+                new androidx.lifecycle.ViewModelProvider(getActivity(), factory)
+                    .get(com.example.outfitchanges.ui.home.HomeViewModel.class);
+            homeViewModel.applyUserGender(gender);
+        }
+    }
+    
+    /**
+     * 重新加载穿搭数据（当个人偏好更新后调用）
+     */
+    public void reloadHomeData() {
+        if (getActivity() != null) {
+            androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory factory = 
+                new androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory(getActivity().getApplication());
+            com.example.outfitchanges.ui.home.HomeViewModel homeViewModel = 
+                new androidx.lifecycle.ViewModelProvider(getActivity(), factory)
+                    .get(com.example.outfitchanges.ui.home.HomeViewModel.class);
+            // 重新加载数据，会应用当前的筛选条件（包括性别和个人偏好）
+            homeViewModel.loadData();
         }
     }
 
@@ -175,8 +220,10 @@ public class ProfileFragment extends Fragment {
                 PreferencesDialog dialog = new PreferencesDialog(getContext(), prefManager);
                 dialog.setProfileViewModel(profileViewModel, getViewLifecycleOwner());
                 dialog.setOnPreferencesSavedListener(() -> {
-                    // 刷新个人资料
+                    // 刷新个人资料（会自动应用新的偏好和性别筛选）
                     profileViewModel.loadProfile();
+                    // 重新加载穿搭数据，应用新的筛选条件
+                    reloadHomeData();
                 });
                 dialog.show();
             }

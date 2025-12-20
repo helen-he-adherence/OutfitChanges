@@ -147,13 +147,16 @@ public class PreferencesDialog extends Dialog {
         // 先清空所有选择
         clearAllSelections();
         
-        // 加载性别
+        // 加载性别（需要将API返回的值映射为UI显示的值）
         if (profile.getGender() != null && !profile.getGender().isEmpty()) {
-            for (int i = 0; i < chipGroupGender.getChildCount(); i++) {
-                Chip chip = (Chip) chipGroupGender.getChildAt(i);
-                if (chip.getText().toString().equals(profile.getGender())) {
-                    chip.setChecked(true);
-                    break;
+            String genderUI = mapGenderAPIToUI(profile.getGender());
+            if (genderUI != null) {
+                for (int i = 0; i < chipGroupGender.getChildCount(); i++) {
+                    Chip chip = (Chip) chipGroupGender.getChildAt(i);
+                    if (chip.getText().toString().equals(genderUI)) {
+                        chip.setChecked(true);
+                        break;
+                    }
                 }
             }
         }
@@ -276,8 +279,8 @@ public class PreferencesDialog extends Dialog {
                 if (message != null && !message.isEmpty() && isSaving) {
                     isSaving = false;
                     // 保存成功后，ProfileViewModel.updatePreferences() 已经会自动调用 loadProfile()
-                    // 所以这里不需要再次调用 loadProfile()，只需要等待 profile 更新即可
-                    // ProfileFragment 的观察者会自动检测到 profile 更新并应用到穿搭广场
+                    // 等待 profile 更新后，ProfileFragment 的观察者会自动检测到 profile 更新
+                    // 并应用到穿搭广场，同时重新加载穿搭数据
                     if (listener != null) {
                         listener.onSaved();
                     }
@@ -295,13 +298,58 @@ public class PreferencesDialog extends Dialog {
         }
     }
 
+    /**
+     * 将API返回的性别值映射为UI显示的值
+     */
+    private String mapGenderAPIToUI(String apiValue) {
+        if (apiValue == null) return null;
+        switch (apiValue.toLowerCase()) {
+            case "male":
+                return "男";
+            case "female":
+                return "女";
+            case "unisex":
+            case "other":
+            case "其他":
+                return "其他";
+            default:
+                // 如果已经是UI格式，直接返回
+                if (apiValue.equals("男") || apiValue.equals("女") || apiValue.equals("其他")) {
+                    return apiValue;
+                }
+                return null;
+        }
+    }
+    
+    /**
+     * 将UI显示的性别值映射为API需要的值
+     */
+    private String mapGenderUIToAPI(String uiValue) {
+        if (uiValue == null) return null;
+        switch (uiValue) {
+            case "男":
+                return "male";
+            case "女":
+                return "female";
+            case "其他":
+                return "unisex";
+            default:
+                // 如果已经是API格式，直接返回
+                if (uiValue.equals("male") || uiValue.equals("female") || uiValue.equals("unisex")) {
+                    return uiValue;
+                }
+                return null;
+        }
+    }
+    
     private void savePreferences() {
-        // 收集性别
+        // 收集性别（需要将UI显示的值映射为API需要的值）
         String gender = null;
         for (int i = 0; i < chipGroupGender.getChildCount(); i++) {
             Chip chip = (Chip) chipGroupGender.getChildAt(i);
             if (chip.isChecked()) {
-                gender = chip.getText().toString();
+                String uiValue = chip.getText().toString();
+                gender = mapGenderUIToAPI(uiValue);
                 break;
             }
         }

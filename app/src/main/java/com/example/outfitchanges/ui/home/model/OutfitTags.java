@@ -1,5 +1,6 @@
 package com.example.outfitchanges.ui.home.model;
 
+import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,17 +11,25 @@ public class OutfitTags {
     private List<OutfitClothingItem> items;
 
     @SerializedName("overall_style")
+    @JsonAdapter(StringListTypeAdapter.class)
     private List<String> overallStyle;
 
     @SerializedName("occasion")
+    @JsonAdapter(StringListTypeAdapter.class)
     private List<String> occasion;
 
     @SerializedName("season")
+    @JsonAdapter(StringListTypeAdapter.class)
     private List<String> season;
 
     // 数据里可能没有天气字段，预留便于扩展
     @SerializedName("weather")
+    @JsonAdapter(StringListTypeAdapter.class)
     private List<String> weather;
+
+    @SerializedName("sex")
+    @JsonAdapter(SexTypeAdapter.class)
+    private List<String> sex;
 
     public List<OutfitClothingItem> getItems() {
         return items == null ? Collections.emptyList() : items;
@@ -40,6 +49,10 @@ public class OutfitTags {
 
     public List<String> getWeather() {
         return weather == null ? Collections.emptyList() : weather;
+    }
+
+    public List<String> getSex() {
+        return sex == null ? Collections.emptyList() : sex;
     }
 
     public List<String> getAllCategories() {
@@ -87,6 +100,10 @@ public class OutfitTags {
 
     public void setWeather(List<String> weather) {
         this.weather = weather;
+    }
+
+    public void setSex(List<String> sex) {
+        this.sex = sex;
     }
 }
 

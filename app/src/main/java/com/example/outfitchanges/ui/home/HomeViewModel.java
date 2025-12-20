@@ -35,12 +35,13 @@ public class HomeViewModel extends AndroidViewModel {
         selectedFilters.put("style", new HashSet<>());
         selectedFilters.put("category", new HashSet<>());
         selectedFilters.put("color", new HashSet<>());
+        selectedFilters.put("sex", new HashSet<>());
     }
 
     private final MutableLiveData<List<OutfitDisplayModel>> allOutfits = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<List<OutfitDisplayModel>> filteredOutfits = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<Boolean> loading = new MutableLiveData<>(false);
-    private final MutableLiveData<String> error = new MutableLiveData<>("");
+    private final MutableLiveData<String> error = new MutableLiveData<>();
     private final MutableLiveData<OutfitListResponse.Pagination> pagination = new MutableLiveData<>();
 
     private final Map<String, Set<String>> selectedFilters = new HashMap<>();
@@ -164,6 +165,8 @@ public class HomeViewModel extends AndroidViewModel {
                         // 默认列表需要应用本地筛选（关键词搜索）
                         // 直接使用新加载的数据，避免异步问题
                         applyFilters(displayModels);
+                        // 成功加载数据，清空错误消息
+                        error.postValue("");
                     } else {
                         String errorMsg = "获取穿搭数据失败";
                         if (data == null) {
@@ -203,9 +206,10 @@ public class HomeViewModel extends AndroidViewModel {
         String style = buildFilterString(selectedFilters.get("style"), "style");
         String category = buildFilterString(selectedFilters.get("category"), "category");
         String color = buildFilterString(selectedFilters.get("color"), "color");
+        String sex = buildFilterString(selectedFilters.get("sex"), "sex");
 
         android.util.Log.d("HomeViewModel", "loadWithFilters called with offset: " + offset);
-        repository.discoverOutfits(season, weather, occasion, style, category, color,
+        repository.discoverOutfits(season, weather, occasion, style, category, color, sex,
                 DEFAULT_LIMIT, offset, new OutfitRepository.OutfitCallback<OutfitListResponse>() {
             @Override
             public void onSuccess(OutfitListResponse data) {
@@ -247,6 +251,8 @@ public class HomeViewModel extends AndroidViewModel {
                         // 不需要再应用本地筛选条件，直接显示结果
                         // 直接使用新加载的数据，避免异步问题
                         applyKeywordFilter(displayModels);
+                        // 成功加载数据，清空错误消息
+                        error.postValue("");
                     } else {
                         String errorMsg = "获取筛选结果失败";
                         if (data == null) {
@@ -285,6 +291,16 @@ public class HomeViewModel extends AndroidViewModel {
             if ("夏季".equals(value)) return "夏";
             if ("秋季".equals(value)) return "秋";
             if ("冬季".equals(value)) return "冬";
+        }
+        // 性别映射（如果从UI传入的是中文，需要转换为API格式）
+        if ("sex".equals(filterKey)) {
+            if ("男".equals(value)) return "male";
+            if ("女".equals(value)) return "female";
+            if ("中性".equals(value)) return "unisex";
+            // 如果已经是API格式，直接返回
+            if ("male".equals(value) || "female".equals(value) || "unisex".equals(value)) {
+                return value;
+            }
         }
         // 其他筛选条件保持原样，或者根据需要添加映射
         return value;
@@ -328,7 +344,7 @@ public class HomeViewModel extends AndroidViewModel {
 
     /**
      * 从OutfitListItem转换为OutfitDisplayModel
-     * 只显示整体风格、适用场合、适合天气标签
+     * 显示整体风格、适用场合、适合天气、性别标签
      */
     private OutfitDisplayModel toDisplayModelFromListItem(OutfitListResponse.OutfitListItem item) {
         OutfitTags tags = item.getTags();
@@ -342,6 +358,12 @@ public class HomeViewModel extends AndroidViewModel {
             // 删除季节和颜色标签
         }
 
+        // 添加性别标签
+        String sexDisplay = getSexDisplayText(item);
+        if (sexDisplay != null && !sexDisplay.isEmpty()) {
+            mergedTags.add(sexDisplay);
+        }
+
         String owner = "用户 " + item.getUserId();
         int likes = item.getLikes();
         boolean isFavorited = item.getIsFavorited() != null && item.getIsFavorited();
@@ -350,6 +372,53 @@ public class HomeViewModel extends AndroidViewModel {
         model.setOutfitId(item.getId());
         model.setFavorite(isFavorited);
         return model;
+    }
+
+    /**
+     * 获取性别的显示文本（将API格式转换为中文）
+     * 优先使用item.getSex()，如果为空则使用tags.getSex()
+     */
+    private String getSexDisplayText(OutfitListResponse.OutfitListItem item) {
+        // 优先使用item的sex字段（String类型）
+        String sex = item.getSex();
+        if (sex != null && !sex.isEmpty()) {
+            return mapSexToDisplay(sex);
+        }
+        
+        // 如果item的sex为空，尝试从tags中获取
+        OutfitTags tags = item.getTags();
+        if (tags != null && tags.getSex() != null && !tags.getSex().isEmpty()) {
+            // tags.getSex()返回List<String>，取第一个
+            String sexFromTags = tags.getSex().get(0);
+            if (sexFromTags != null && !sexFromTags.isEmpty()) {
+                return mapSexToDisplay(sexFromTags);
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * 将API的sex值（male/female/unisex）转换为中文显示（男/女/中性）
+     */
+    private String mapSexToDisplay(String sex) {
+        if (sex == null || sex.isEmpty()) {
+            return null;
+        }
+        switch (sex.toLowerCase()) {
+            case "male":
+                return "男";
+            case "female":
+                return "女";
+            case "unisex":
+                return "中性";
+            default:
+                // 如果已经是中文，直接返回
+                if (sex.equals("男") || sex.equals("女") || sex.equals("中性")) {
+                    return sex;
+                }
+                return sex; // 其他情况直接返回原值
+        }
     }
 
     /**
@@ -411,7 +480,7 @@ public class HomeViewModel extends AndroidViewModel {
             return;
         }
         
-        // 清空现有筛选（但保留天气筛选，因为天气筛选是自动的）
+        // 清空现有筛选（但保留天气筛选和性别筛选，因为天气筛选是自动的，性别筛选是用户基础信息）
         Set<String> weatherFilter = selectedFilters.get("weather");
         String savedWeather = null;
         if (weatherFilter != null && !weatherFilter.isEmpty()) {
@@ -419,9 +488,16 @@ public class HomeViewModel extends AndroidViewModel {
             savedWeather = weatherFilter.iterator().next();
         }
         
-        // 清空除天气外的其他筛选
+        Set<String> sexFilter = selectedFilters.get("sex");
+        String savedSex = null;
+        if (sexFilter != null && !sexFilter.isEmpty()) {
+            // 保存当前的性别筛选
+            savedSex = sexFilter.iterator().next();
+        }
+        
+        // 清空除天气和性别外的其他筛选
         for (Map.Entry<String, Set<String>> entry : selectedFilters.entrySet()) {
-            if (!"weather".equals(entry.getKey())) {
+            if (!"weather".equals(entry.getKey()) && !"sex".equals(entry.getKey())) {
                 entry.getValue().clear();
             }
         }
@@ -431,6 +507,16 @@ public class HomeViewModel extends AndroidViewModel {
             weatherFilter.clear();
             weatherFilter.add(savedWeather);
         }
+        
+        // 恢复性别筛选
+        if (savedSex != null && sexFilter != null) {
+            sexFilter.clear();
+            sexFilter.add(savedSex);
+        }
+        
+        // 应用偏好性别（从用户个人资料中获取）
+        // 注意：性别偏好存储在Profile的gender字段，而不是Preferences中
+        // 这里需要从Profile中获取gender，然后映射为sex筛选值
         
         // 应用偏好风格
         if (preferences.getPreferredStyles() != null && preferences.getPreferredStyles().length > 0) {
@@ -470,6 +556,77 @@ public class HomeViewModel extends AndroidViewModel {
         filteredOutfits.postValue(new ArrayList<>());
         // 重新加载数据（带个人喜好筛选）
         loadDiscoverOutfits(0);
+    }
+    
+    /**
+     * 应用用户性别偏好筛选
+     * @param gender 用户性别（"男"、"女"、"其他"或API格式"male"、"female"、"unisex"）
+     * @param skipReload 是否跳过重新加载（用于组合筛选时避免重复加载）
+     */
+    public void applyUserGender(String gender, boolean skipReload) {
+        if (gender == null || gender.isEmpty()) {
+            return;
+        }
+        
+        // 将UI显示的性别值映射为API需要的值
+        String sexValue = mapGenderToSex(gender);
+        if (sexValue != null) {
+            Set<String> sexSet = selectedFilters.get("sex");
+            if (sexSet != null) {
+                // 检查是否已经有相同的性别筛选
+                if (sexSet.size() == 1 && sexSet.contains(sexValue)) {
+                    // 如果性别筛选已经存在且相同，且不需要重新加载，直接返回
+                    if (skipReload) {
+                        return;
+                    }
+                    // 如果性别筛选已经存在且相同，但数据可能还没加载，检查是否需要加载
+                    List<OutfitDisplayModel> currentData = allOutfits.getValue();
+                    if (currentData != null && !currentData.isEmpty()) {
+                        // 数据已加载，不需要重新加载
+                        return;
+                    }
+                    // 数据未加载，继续加载
+                }
+                
+                sexSet.clear();
+                sexSet.add(sexValue);
+                
+                if (!skipReload) {
+                    // 立即清空列表，避免显示旧数据
+                    filteredOutfits.postValue(new ArrayList<>());
+                    // 重新加载数据（带性别筛选，同时保留其他筛选条件如个人偏好）
+                    loadDiscoverOutfits(0);
+                }
+            }
+        }
+    }
+    
+    /**
+     * 应用用户性别偏好筛选（默认会重新加载数据）
+     */
+    public void applyUserGender(String gender) {
+        applyUserGender(gender, false);
+    }
+    
+    /**
+     * 将用户性别（UI显示值）映射为API需要的sex值
+     */
+    private String mapGenderToSex(String gender) {
+        if (gender == null) return null;
+        switch (gender) {
+            case "男":
+                return "male";
+            case "女":
+                return "female";
+            case "其他":
+                return "unisex";
+            default:
+                // 如果已经是API格式，直接返回
+                if (gender.equals("male") || gender.equals("female") || gender.equals("unisex")) {
+                    return gender;
+                }
+                return null;
+        }
     }
     
     /**

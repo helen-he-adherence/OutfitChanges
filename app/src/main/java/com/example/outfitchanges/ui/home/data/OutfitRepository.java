@@ -325,7 +325,7 @@ public class OutfitRepository {
      * 如果带 token 的请求返回 500 错误，会降级为不带 token 的请求
      */
     public void discoverOutfits(String season, String weather, String occasion, String style,
-                                 String category, String color, Integer limit, Integer offset,
+                                 String category, String color, String sex, Integer limit, Integer offset,
                                  OutfitCallback<OutfitListResponse> callback) {
         // 检查是否有 token，如果有则尝试带 token 的请求，否则直接使用不带 token 的请求
         String token = null;
@@ -333,19 +333,19 @@ public class OutfitRepository {
             token = com.example.outfitchanges.utils.TokenManager.getInstance(context).getToken();
         }
         boolean hasToken = token != null && !token.isEmpty();
-        discoverOutfitsWithToken(season, weather, occasion, style, category, color, limit, offset, callback, hasToken);
+        discoverOutfitsWithToken(season, weather, occasion, style, category, color, sex, limit, offset, callback, hasToken);
     }
 
     /**
      * 内部方法：尝试带 token 的请求，如果失败则降级为不带 token 的请求
      */
     private void discoverOutfitsWithToken(String season, String weather, String occasion, String style,
-                                          String category, String color, Integer limit, Integer offset,
+                                          String category, String color, String sex, Integer limit, Integer offset,
                                           OutfitCallback<OutfitListResponse> callback, boolean withToken) {
         // 如果不需要token，传递X-Skip-Auth header来跳过token拦截器
         String skipAuth = withToken ? null : "true";
         Call<OutfitListResponse> call = apiService.discoverOutfits(
-                season, weather, occasion, style, category, color, limit, offset, skipAuth
+                season, weather, occasion, style, category, color, sex, limit, offset, skipAuth
         );
         call.enqueue(new Callback<OutfitListResponse>() {
             @Override
@@ -358,7 +358,7 @@ public class OutfitRepository {
                     if (response.code() == 500 && withToken) {
                         android.util.Log.w("OutfitRepository", "Discover outfits with token returned 500, retrying without token");
                         // 使用X-Skip-Auth header重试，不需要清除token
-                        discoverOutfitsWithToken(season, weather, occasion, style, category, color, limit, offset, callback, false);
+                        discoverOutfitsWithToken(season, weather, occasion, style, category, color, sex, limit, offset, callback, false);
                         return;
                     }
                     
@@ -392,7 +392,7 @@ public class OutfitRepository {
                 if (withToken) {
                     android.util.Log.w("OutfitRepository", "Discover outfits with token failed, retrying without token: " + t.getMessage());
                     // 使用X-Skip-Auth header重试，不需要清除token
-                    discoverOutfitsWithToken(season, weather, occasion, style, category, color, limit, offset, callback, false);
+                    discoverOutfitsWithToken(season, weather, occasion, style, category, color, sex, limit, offset, callback, false);
                 } else {
                     android.util.Log.e("OutfitRepository", "Discover outfits without token also failed: " + t.getMessage());
                     callback.onError("网络错误: " + t.getMessage());

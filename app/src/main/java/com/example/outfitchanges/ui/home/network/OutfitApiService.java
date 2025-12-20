@@ -69,6 +69,7 @@ public interface OutfitApiService {
             @Query("style") String style,
             @Query("category") String category,
             @Query("color") String color,
+            @Query("sex") String sex,
             @Query("limit") Integer limit,
             @Query("offset") Integer offset,
             @Header("X-Skip-Auth") String skipAuth

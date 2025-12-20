@@ -72,14 +72,59 @@ public class MainActivity extends AppCompatActivity {
         
         // 如果是正常登录，预加载个人资料和个人偏好
         if (prefManager.isLoggedIn() && !prefManager.isGuestMode()) {
-            // 预加载个人资料（会自动应用个人偏好到穿搭广场）
+            // 预加载个人资料（会自动应用个人偏好和性别筛选到穿搭广场）
             ProfileViewModel profileViewModel = new ViewModelProvider(this).get(ProfileViewModel.class);
+            
+            // 使用一个标志来确保只加载一次数据
+            final boolean[] dataLoaded = {false};
+            
+            // 观察个人资料加载完成，然后应用筛选并加载穿搭数据
+            profileViewModel.getProfile().observe(this, profile -> {
+                if (profile != null && !dataLoaded[0]) {
+                    dataLoaded[0] = true;
+                    
+                    // 同时应用用户性别筛选和个人偏好筛选（无先后顺序）
+                    boolean hasGender = profile.getGender() != null && !profile.getGender().isEmpty();
+                    boolean hasPreferences = profile.getPreferences() != null && 
+                        ((profile.getPreferences().getPreferredStyles() != null && profile.getPreferences().getPreferredStyles().length > 0) ||
+                         (profile.getPreferences().getPreferredColors() != null && profile.getPreferences().getPreferredColors().length > 0) ||
+                         (profile.getPreferences().getPreferredSeasons() != null && profile.getPreferences().getPreferredSeasons().length > 0));
+                    
+                    if (hasGender || hasPreferences) {
+                        // 有筛选条件，同时应用性别筛选和个人偏好筛选（无先后顺序）
+                        // 先应用性别筛选（不重新加载）
+                        if (hasGender) {
+                            homeViewModel.applyUserGender(profile.getGender(), true);
+                        }
+                        // 再应用个人偏好筛选（会保留性别筛选，并触发加载）
+                        if (hasPreferences) {
+                            homeViewModel.applyUserPreferences(profile.getPreferences());
+                        } else if (hasGender) {
+                            // 如果只有性别筛选，没有个人偏好，需要手动触发加载
+                            homeViewModel.applyUserGender(profile.getGender(), false);
+                        }
+                    } else {
+                        // 既没有性别也没有偏好，直接加载默认数据
+                        homeViewModel.loadData();
+                    }
+                }
+            });
+            
+            // 观察错误，如果加载失败，直接加载数据
+            profileViewModel.getErrorMessage().observe(this, error -> {
+                if (error != null && !error.isEmpty() && !dataLoaded[0]) {
+                    dataLoaded[0] = true;
+                    // 个人资料加载失败，直接加载默认数据
+                    homeViewModel.loadData();
+                }
+            });
+            
+            // 开始加载个人资料
             profileViewModel.loadProfile();
+        } else {
+            // 游客模式，直接加载穿搭数据
+            homeViewModel.loadData();
         }
-        
-        // 开始加载穿搭广场数据（游客使用/api/outfits，正常登录根据个人偏好使用/api/discover/outfits）
-        // 注意：天气筛选会在天气数据加载后自动应用
-        homeViewModel.loadData();
     }
 
     private void setupBottomNavigation() {

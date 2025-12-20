@@ -43,6 +43,7 @@ public class EditOutfitActivity extends AppCompatActivity {
     private ChipGroup chipGroupOccasion;
     private ChipGroup chipGroupSeason;
     private ChipGroup chipGroupWeather;
+    private ChipGroup chipGroupSex;
     private LinearLayout layoutItemsContainer;
     private LinearLayout btnAddItem;
     private ProgressBar progressUpload;
@@ -122,6 +123,7 @@ public class EditOutfitActivity extends AppCompatActivity {
         chipGroupOccasion = findViewById(R.id.chip_group_occasion);
         chipGroupSeason = findViewById(R.id.chip_group_season);
         chipGroupWeather = findViewById(R.id.chip_group_weather);
+        chipGroupSex = findViewById(R.id.chip_group_sex);
         layoutItemsContainer = findViewById(R.id.layout_items_container);
         btnAddItem = findViewById(R.id.btn_add_item);
         progressUpload = findViewById(R.id.progress_upload);
@@ -202,6 +204,63 @@ public class EditOutfitActivity extends AppCompatActivity {
         
         // 加载适合的天气标签
         loadTagChips(chipGroupWeather, modifiedTags.getWeather(), true);
+        
+        // 加载性别标签
+        loadSexChips();
+    }
+    
+    private void loadSexChips() {
+        chipGroupSex.removeAllViews();
+        
+        // 性别选项：male, female, unisex
+        String[] sexOptions = {"男", "女", "中性"};
+        String[] sexValues = {"male", "female", "unisex"};
+        
+        // 获取当前选中的性别值
+        List<String> currentSex = modifiedTags.getSex();
+        String selectedValue = null;
+        if (currentSex != null && !currentSex.isEmpty()) {
+            selectedValue = currentSex.get(0); // 取第一个值
+        }
+        
+        for (int i = 0; i < sexOptions.length; i++) {
+            Chip chip = new Chip(this);
+            chip.setText(sexOptions[i]);
+            chip.setChipBackgroundColorResource(R.color.pink_bg);
+            chip.setTextColor(getResources().getColor(R.color.primary_color, null));
+            chip.setCloseIconVisible(false); // 性别标签不可删除
+            chip.setChipMinHeight(36);
+            chip.setTextSize(12);
+            chip.setPadding(8, 8, 8, 8);
+            chip.setCheckable(true);
+            
+            // 设置选中状态
+            if (selectedValue != null && selectedValue.equals(sexValues[i])) {
+                chip.setChecked(true);
+            }
+            
+            // 设置点击监听，确保只能选择一个
+            chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (isChecked) {
+                    // 取消其他选项
+                    for (int j = 0; j < chipGroupSex.getChildCount(); j++) {
+                        View child = chipGroupSex.getChildAt(j);
+                        if (child instanceof Chip && child != buttonView) {
+                            ((Chip) child).setChecked(false);
+                        }
+                    }
+                }
+            });
+            
+            ChipGroup.LayoutParams params = new ChipGroup.LayoutParams(
+                    ChipGroup.LayoutParams.WRAP_CONTENT,
+                    ChipGroup.LayoutParams.WRAP_CONTENT
+            );
+            params.setMargins(0, 0, 8, 8);
+            chip.setLayoutParams(params);
+            
+            chipGroupSex.addView(chip);
+        }
     }
     
     private void loadTagChips(ChipGroup chipGroup, List<String> tags, boolean canAdd) {
@@ -433,6 +492,25 @@ public class EditOutfitActivity extends AppCompatActivity {
         // 收集适合的天气
         tags.setWeather(getTagsFromChipGroup(chipGroupWeather));
         
+        // 收集性别（单选）
+        List<String> sexList = new ArrayList<>();
+        for (int i = 0; i < chipGroupSex.getChildCount(); i++) {
+            View child = chipGroupSex.getChildAt(i);
+            if (child instanceof Chip) {
+                Chip chip = (Chip) child;
+                if (chip.isChecked()) {
+                    // 将UI显示的值转换为API需要的值
+                    String uiValue = chip.getText().toString();
+                    String apiValue = mapSexUIToAPI(uiValue);
+                    if (apiValue != null) {
+                        sexList.add(apiValue);
+                    }
+                    break; // 只能选一个
+                }
+            }
+        }
+        tags.setSex(sexList);
+        
         // 收集单品列表
         List<OutfitClothingItem> items = new ArrayList<>();
         for (ItemViewHolder holder : itemViewHolders) {
@@ -471,6 +549,23 @@ public class EditOutfitActivity extends AppCompatActivity {
         tags.setItems(items);
         
         return tags;
+    }
+    
+    /**
+     * 将UI显示的性别值映射为API需要的值
+     */
+    private String mapSexUIToAPI(String uiValue) {
+        if (uiValue == null) return null;
+        switch (uiValue) {
+            case "男":
+                return "male";
+            case "女":
+                return "female";
+            case "中性":
+                return "unisex";
+            default:
+                return uiValue; // 如果已经是API格式，直接返回
+        }
     }
     
     private List<String> getTagsFromChipGroup(ChipGroup chipGroup) {
