@@ -1,10 +1,10 @@
 package com.example.outfitchanges.auth.model;
 
 public class RegisterResponse {
-    private boolean success;
-    private String message;
-    private String token;
-    private UserInfo user;
+    private boolean success; //是否注册成功（布尔值）
+    private String message; //服务器返回的人类可读消息（如“用户名已存在”）；
+    private String token; //注册成功后返回的 JWT 认证令牌；
+    private UserInfo user; //包含新注册用户的详细信息（嵌套类）。
 
     public boolean isSuccess() {
         return success;
@@ -39,6 +39,7 @@ public class RegisterResponse {
     }
 
     public static class UserInfo {
+        //静态内部类 UserInfo：避免创建额外文件，同时清晰表达“用户信息”是响应的一部分。
         private int id;
         private String username;
         private String email;
@@ -68,6 +69,9 @@ public class RegisterResponse {
         }
     }
 }
+
+
+
 
 
 

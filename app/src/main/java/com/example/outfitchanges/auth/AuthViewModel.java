@@ -15,22 +15,26 @@ import retrofit2.Response;
 
 public class AuthViewModel extends ViewModel {
 
-    // 用于存储登录状态
+    // 用于存储登录状态  LiveData 用于通知UI
     private MutableLiveData<Boolean> isLoggedIn = new MutableLiveData<>(false);
     private MutableLiveData<String> currentUser = new MutableLiveData<>();
     private MutableLiveData<String> errorMessage = new MutableLiveData<>();
     private MutableLiveData<LoginResponse> loginResponse = new MutableLiveData<>();
     private MutableLiveData<RegisterResponse> registerResponse = new MutableLiveData<>();
+
+    //网络客户端（单例）
     private final AuthApiService apiService;
     private final AuthNetworkClient networkClient;
 
     public AuthViewModel() {
-        networkClient = AuthNetworkClient.getInstance();
-        apiService = networkClient.getApiService();
+        networkClient = AuthNetworkClient.getInstance();  //单例
+        //apiService 是 Retrofit 动态生成的，底层使用 OkHttpClient（带 TokenInterceptor 和日志）。
+        apiService = networkClient.getApiService();       //获取Retrofit接口
     }
 
     // 登录方法
     public void login(String email, String password) {
+        //1.输入校验（邮箱格式、密码长度、一致性）
         if (email == null || email.trim().isEmpty()) {
             errorMessage.setValue("请输入邮箱");
             return;
@@ -144,7 +148,7 @@ public class AuthViewModel extends ViewModel {
 
     // 注册方法
     public void register(String username, String email, String password, String confirmPassword) {
-        // 验证输入
+        // 1.输入校验（邮箱格式、密码长度、一致性等）
         if (username == null || username.trim().isEmpty()) {
             errorMessage.setValue("请输入用户名");
             return;
@@ -178,11 +182,12 @@ public class AuthViewModel extends ViewModel {
         // 调用注册 API
         // 确保密码没有前后空格
         String trimmedPassword = password.trim();
+        //4️⃣ 2.构造RegisterRequest
         RegisterRequest request = new RegisterRequest(username.trim(), email.trim(), trimmedPassword);
         
         // 添加调试日志
         android.util.Log.d("AuthViewModel", "尝试注册 - 用户名: " + username.trim() + ", 邮箱: " + email.trim() + ", 密码长度: " + trimmedPassword.length());
-        
+        //3.调用Retrofit接口
         Call<RegisterResponse> call = apiService.register(request);
         call.enqueue(new Callback<RegisterResponse>() {
             @Override
@@ -193,12 +198,13 @@ public class AuthViewModel extends ViewModel {
                     android.util.Log.d("AuthViewModel", "注册响应体 - Success: " + registerResponse.isSuccess() + ", Message: " + registerResponse.getMessage());
                     if (registerResponse.isSuccess()) {
                         // 注册成功，token 会由 RegisterActivity 通过 TokenManager 统一管理
-                        // 注册成功
+                        //成功更新LiveData
                         AuthViewModel.this.registerResponse.setValue(registerResponse);
                         currentUser.setValue(email);
                         isLoggedIn.setValue(true);
                         errorMessage.setValue(null);
                     } else {
+                        //处理HTTP错误（400.500等），解析errorBody
                         errorMessage.setValue(registerResponse.getMessage() != null ? registerResponse.getMessage() : "注册失败");
                     }
                 } else {

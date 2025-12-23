@@ -12,8 +12,16 @@ import com.example.outfitchanges.R;
 import com.example.outfitchanges.auth.model.RegisterResponse;
 import com.example.outfitchanges.utils.SharedPrefManager;
 
+
+//MVVM架构：Activity只负责UI和用户交互，不直接处理网络或业务逻辑
+//ViewModel解耦 ：通过ViewModelProvider获取AuthViewModel,生命周期安全
+//LiveData观察：
+        //registerResponse：成功后保存token、用户信息、跳转主页
+        //errorMessage：失败时弹出提示
+
 public class RegisterActivity extends AppCompatActivity {
 
+    //UI控件引用
     private EditText usernameEditText;
     private EditText emailEditText;
     private EditText verificationCodeEditText;
@@ -26,9 +34,10 @@ public class RegisterActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
-        // 初始化ViewModel
+        // 初始化ViewModel（MVVM 架构核心）
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
 
+        //绑定UI控件
         usernameEditText = findViewById(R.id.username_edit_text);
         emailEditText = findViewById(R.id.email_edit_text);
         verificationCodeEditText = findViewById(R.id.verification_code_edit_text);
@@ -42,22 +51,23 @@ public class RegisterActivity extends AppCompatActivity {
                 Toast.makeText(this, "验证码已发送（模拟）", Toast.LENGTH_SHORT).show()
         );
 
+        //1️⃣ 注册按钮点击 -> 尝试注册
         registerButton.setOnClickListener(v -> attemptRegister());
 
-        // 观察注册响应
+        // 关键：观察注册结果（LiveData）
         authViewModel.getRegisterResponse().observe(this, registerResponse -> {
             if (registerResponse != null && registerResponse.isSuccess()) {
-                // 注册成功，保存用户信息和token
+                // 1.保存登录状态 注册成功，保存用户信息和token
                 SharedPrefManager prefManager = new SharedPrefManager(this);
                 prefManager.setLoggedIn(true);
                 
-                // 使用 TokenManager 统一设置 token 到所有 NetworkClient
+                // 2.使用 TokenManager 统一设置 token 到所有 NetworkClient
                 if (registerResponse.getToken() != null) {
                     com.example.outfitchanges.utils.TokenManager.getInstance(RegisterActivity.this)
                             .setToken(registerResponse.getToken());
                 }
                 
-                // 保存用户信息
+                // 3.保存用户基本信息到 SharedPreferences
                 if (registerResponse.getUser() != null) {
                     prefManager.setUserId(String.valueOf(registerResponse.getUser().getId()));
                     prefManager.setUsername(registerResponse.getUser().getUsername());
@@ -71,12 +81,7 @@ public class RegisterActivity extends AppCompatActivity {
             }
         });
 
-        // 观察登录状态（备用）
-        authViewModel.getIsLoggedIn().observe(this, isLoggedIn -> {
-            // 这个观察者主要用于兼容性，实际注册成功通过registerResponse处理
-        });
-
-        // 观察错误信息
+        // 观察错误信息（用于 Toast 提示）
         authViewModel.getErrorMessage().observe(this, errorMessage -> {
             if (errorMessage != null && !errorMessage.isEmpty()) {
                 Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
@@ -84,13 +89,16 @@ public class RegisterActivity extends AppCompatActivity {
         });
     }
 
+    //2️⃣
     private void attemptRegister() {
+        //1.获取输入
         String username = usernameEditText.getText().toString().trim();
         String email = emailEditText.getText().toString().trim();
         String code = verificationCodeEditText.getText().toString().trim();
         String password = passwordEditText.getText().toString().trim();
         String confirmPassword = confirmPasswordEditText.getText().toString().trim();
 
+        //2.基础校验
         if (username.isEmpty()) {
             usernameEditText.setError("请输入用户名");
             return;
@@ -117,7 +125,7 @@ public class RegisterActivity extends AppCompatActivity {
             return;
         }
 
-        // 调用ViewModel的注册方法
+        //3️⃣ 3. 调用 ViewModel 的注册方法（不直接操作网络！）
         authViewModel.register(username, email, password, confirmPassword);
     }
 }

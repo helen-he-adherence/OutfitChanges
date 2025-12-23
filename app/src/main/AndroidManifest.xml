@@ -1,15 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--表示该文件使用XML1.0版本，字符编码为utf-8-->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+<!--开始 <manifest> 标签，并声明了Android的命名空间，所有以android：开头的属性都来自这个命名空间
+    声明了 tools 命名空间，通常用于在开发阶段提供构建或lint工具相关的指令-->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!--请求访问互联网的权限，应用需要联网时必须声明-->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!--允许应用检查网络连接状态（比如说是否连接到了Wi-Fi或移动数据-->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!--请求高精度位置权限（如GPS），用于获取用户精准地理位置-->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <!--请求粗略位置权限（如通过基站或 Wi-Fi 定位），精度较低但耗电少-->
+<!--    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />-->
+    <!--请求读取外部存储（如 SD 卡或共享存储）的权限。注意：从 Android 10（API 29）起，此权限行为受限，推荐使用分区存储（Scoped Storage）。-->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="28" />
+    <!--这是 Android 13（API 33）引入的新权限，专门用于读取图片（属于“照片和视频”媒体类型），替代旧的 READ_EXTERNAL_STORAGE-->
+<!--    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"-->
+<!--        android:maxSdkVersion="28" />-->
+    <!--请求写入外部存储的权限，但仅适用于 Android 9（API 28）及以下版本。-->
 
     <application
         android:allowBackup="true"
@@ -21,9 +31,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.OutfitChanges"
         android:usesCleartextTraffic="true">
+
         <activity
             android:name=".auth.ResetPasswordActivity"
             android:exported="false" />
+        <!--android:name=".auth.ResetPasswordActivity"：表示该 Activity 的完整类名为 com.yourpackage.auth.ResetPasswordActivity        -->
+        <!--android:exported="false"：表示该 Activity 不能被其他应用启动，只能由本应用内部调用。这是安全的最佳实践，除非该 Activity 需要被外部（如浏览器、其他 App）打开。       -->
         <activity
             android:name=".auth.ForgetPasswordActivity"
             android:exported="false" />
@@ -42,6 +55,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+    <!--这是应用的主入口 Activity。android:exported="true"：必须设为 true，因为系统 Launcher（桌面）需要能启动它。
+    <intent-filter> 中：MAIN 表示这是程序的主入口点。LAUNCHER 表示该 Activity 会出现在应用启动图标列表中（即桌面上有图标）。-->
         <activity
             android:name=".MainActivity"
             android:exported="false" />

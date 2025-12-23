@@ -45,10 +45,10 @@ OutfitChanges 智能穿搭推荐系统
 - **Token管理模块**：统一管理用户认证Token，自动添加到所有网络请求中，支持Token持久化存储
 
 #### 1.2.2 穿搭广场系统
-- **穿搭浏览展示模块**：以瀑布流形式展示穿搭图片，支持下拉刷新和分页加载
-- **智能筛选搜索模块**：支持多维度筛选（季节、场景、风格、类别、颜色、天气），支持关键词搜索
+- **穿搭浏览展示模块**：以瀑布流形式展示穿搭图片，显示标签（包括性别标签）、作者、点赞数，支持下拉刷新和分页加载
+- **智能筛选搜索模块**：支持多维度筛选（季节、场景、风格、类别、颜色、天气、性别），支持关键词搜索
 - **收藏管理模块**：用户可以收藏喜欢的穿搭，实时更新收藏状态和点赞数
-- **个人偏好应用模块**：根据用户设置的偏好（风格、颜色、季节）自动筛选推荐穿搭
+- **个人偏好应用模块**：根据用户设置的偏好（风格、颜色、季节）和用户性别自动筛选推荐穿搭
 
 #### 1.2.3 天气服务系统
 - **天气查询显示模块**：显示当前天气、24小时天气预报、7天天气预报
@@ -319,44 +319,64 @@ private String getWeatherTypeFromTemp(String temp) {
 - 避免重复加载：检查天气类型是否变化
 - 保留其他筛选条件（如个人偏好）
 
-### 3.3 个人偏好自动应用
+### 3.3 个人偏好和性别筛选自动应用
 
-**问题**：用户设置个人偏好后，需要自动应用到穿搭广场的推荐中。
+**问题**：用户设置个人偏好和性别后，需要自动应用到穿搭广场的推荐中。性别筛选需要与个人偏好筛选组合使用。
 
-**解决方案**：在`ProfileFragment`中加载个人资料后，将偏好传递给`HomeViewModel`。
+**解决方案**：在`MainActivity`预加载个人资料后，同时应用用户性别筛选和个人偏好筛选。
 
 **关键代码**：
 ```java
-// ProfileFragment.java
-private void applyPreferencesToHome(ProfileResponse.Preferences preferences) {
-    if (preferences == null) return;
-    
-    HomeViewModel homeViewModel = new ViewModelProvider(getActivity(), factory)
-        .get(HomeViewModel.class);
-    homeViewModel.applyUserPreferences(preferences);
-}
-
-// HomeViewModel.java
-public void applyUserPreferences(ProfileResponse.Preferences preferences) {
-    // 应用偏好风格
-    if (preferences.getPreferredStyles() != null) {
-        Set<String> styleSet = selectedFilters.get("style");
-        for (String style : preferences.getPreferredStyles()) {
-            styleSet.add(style);
+// MainActivity.java
+profileViewModel.getProfile().observe(this, profile -> {
+    if (profile != null) {
+        // 同时应用用户性别筛选和个人偏好筛选
+        boolean hasGender = profile.getGender() != null && !profile.getGender().isEmpty();
+        boolean hasPreferences = profile.getPreferences() != null && 
+            (preferences.getPreferredStyles() != null || ...);
+        
+        if (hasGender || hasPreferences) {
+            // 先应用性别筛选（不重新加载）
+            if (hasGender) {
+                homeViewModel.applyUserGender(profile.getGender(), true);
+            }
+            // 再应用个人偏好筛选（会保留性别筛选，并触发加载）
+            if (hasPreferences) {
+                homeViewModel.applyUserPreferences(profile.getPreferences());
+            } else if (hasGender) {
+                homeViewModel.applyUserGender(profile.getGender(), false);
+            }
         }
     }
+});
+
+// HomeViewModel.java
+public void applyUserGender(String gender, boolean skipReload) {
+    // 将UI显示的性别值（"男"、"女"、"其他"）映射为API需要的值（"male"、"female"、"unisex"）
+    String sexValue = mapGenderToSex(gender);
+    Set<String> sexSet = selectedFilters.get("sex");
+    sexSet.clear();
+    sexSet.add(sexValue);
     
-    // 应用偏好颜色和季节...
-    
-    // 重新加载数据
+    if (!skipReload) {
+        loadDiscoverOutfits(0);
+    }
+}
+
+public void applyUserPreferences(ProfileResponse.Preferences preferences) {
+    // 保留天气筛选和性别筛选
+    // 只清空其他筛选，然后应用个人偏好
+    // 应用偏好风格、颜色、季节...
     loadDiscoverOutfits(0);
 }
 ```
 
 **实现要点**：
-- 在`ProfileFragment`加载个人资料后自动应用
-- 保留天气筛选，只应用个人偏好筛选
+- 在`MainActivity`预加载个人资料后自动应用性别和偏好筛选
+- 性别筛选优先应用，个人偏好筛选会保留性别筛选
+- 保留天气筛选，组合应用性别筛选和个人偏好筛选
 - 使用ViewModel共享，确保数据同步
+- 游客模式不应用性别筛选，只应用天气筛选
 
 ### 3.4 虚拟试衣异步任务轮询
 
@@ -402,13 +422,21 @@ private void startPollingTaskStatus(String taskId) {
 
 ### 3.5 筛选条件管理
 
-**问题**：多个筛选条件（季节、场景、风格、类别、颜色、天气）需要统一管理，支持组合筛选。
+**问题**：多个筛选条件（季节、场景、风格、类别、颜色、天气、性别）需要统一管理，支持组合筛选。
 
 **解决方案**：使用`Map<String, Set<String>>`存储筛选条件，根据是否有筛选条件选择不同的API。
 
 **关键代码**：
 ```java
 private final Map<String, Set<String>> selectedFilters = new HashMap<>();
+// 初始化筛选条件
+selectedFilters.put("season", new HashSet<>());
+selectedFilters.put("scene", new HashSet<>());
+selectedFilters.put("style", new HashSet<>());
+selectedFilters.put("category", new HashSet<>());
+selectedFilters.put("color", new HashSet<>());
+selectedFilters.put("weather", new HashSet<>());
+selectedFilters.put("sex", new HashSet<>()); // 性别筛选
 
 public void loadDiscoverOutfits(int offset) {
     if (hasFilters()) {
@@ -429,14 +457,87 @@ private String buildFilterString(Set<String> filterSet, String filterKey) {
     }
     return String.join(",", mappedValues);
 }
+
+// 性别值映射（UI显示值 → API值）
+private String mapFilterValue(String filterKey, String value) {
+    if ("sex".equals(filterKey)) {
+        if ("男".equals(value)) return "male";
+        if ("女".equals(value)) return "female";
+        if ("中性".equals(value)) return "unisex";
+        return value; // 如果已经是API格式，直接返回
+    }
+    // 其他筛选条件的映射...
+}
 ```
 
 **实现要点**：
 - 使用Set存储每个筛选类型的多个值
-- 筛选值需要映射（如"春季"→"春"）
+- 筛选值需要映射（如"春季"→"春"，"男"→"male"）
 - 有筛选条件时使用发现接口，无筛选条件时使用默认接口
+- 性别筛选支持三种值：male（男）、female（女）、unisex（中性）
 
-### 3.6 城市数据加载和管理
+### 3.6 性别信息显示和JSON数据兼容
+
+**问题**：API返回的数据中，`raw_tags`字段的`occasion`、`season`、`weather`等字段可能返回字符串或数组两种格式，导致JSON解析失败。同时，穿搭列表需要显示性别标签。
+
+**解决方案**：
+1. 创建`StringListTypeAdapter`处理字符串/数组兼容问题
+2. 在数据转换时将sex字段转换为中文显示
+
+**关键代码**：
+```java
+// StringListTypeAdapter.java - 处理字符串或数组两种格式
+public class StringListTypeAdapter extends TypeAdapter<List<String>> {
+    @Override
+    public List<String> read(JsonReader in) throws IOException {
+        if (in.peek() == JsonToken.BEGIN_ARRAY) {
+            // 数组格式
+            in.beginArray();
+            while (in.hasNext()) {
+                result.add(in.nextString());
+            }
+            in.endArray();
+        } else if (in.peek() == JsonToken.STRING) {
+            // 字符串格式，转换为数组
+            String value = in.nextString();
+            if (value != null && !value.isEmpty()) {
+                result.add(value);
+            }
+        }
+        return result;
+    }
+}
+
+// OutfitTags.java - 使用TypeAdapter
+@SerializedName("occasion")
+@JsonAdapter(StringListTypeAdapter.class)
+private List<String> occasion;
+
+@SerializedName("season")
+@JsonAdapter(StringListTypeAdapter.class)
+private List<String> season;
+
+@SerializedName("weather")
+@JsonAdapter(StringListTypeAdapter.class)
+private List<String> weather;
+
+// HomeViewModel.java - 显示性别标签
+private String getSexDisplayText(OutfitListResponse.OutfitListItem item) {
+    String sex = item.getSex(); // 优先使用item的sex字段
+    if (sex == null) {
+        // 如果为空，从tags中获取
+        sex = item.getTags().getSex().get(0);
+    }
+    return mapSexToDisplay(sex); // 转换为中文：male→男，female→女，unisex→中性
+}
+```
+
+**实现要点**：
+- 使用`@JsonAdapter`注解为可能有两种格式的字段指定TypeAdapter
+- 在`toDisplayModelFromListItem`方法中将sex字段转换为中文显示
+- 支持从`item.getSex()`或`tags.getSex()`获取性别信息
+
+### 3.7 城市数据加载和管理
 
 **问题**：需要支持全国城市数据，实现省市区三级联动选择。
 
@@ -501,9 +602,10 @@ LiveData<List<String>> getCitiesByProvince(String province);
 
 **关键技术**：
 - StaggeredGridLayoutManager实现瀑布流
-- 多维度筛选，支持组合条件
+- 多维度筛选，支持组合条件（季节、场景、风格、类别、颜色、天气、性别）
 - 下拉刷新和分页加载
-- 天气自动筛选和个人偏好应用
+- 天气自动筛选、性别筛选和个人偏好应用
+- 穿搭卡片显示性别标签（男/女/中性）
 
 ### 4.3 天气服务模块
 
@@ -537,6 +639,8 @@ LiveData<List<String>> getCitiesByProvince(String province);
 - 文件上传（Multipart）
 - AI标签识别和编辑
 - 标签数据映射和验证
+- 性别标签编辑（支持male/female/unisex）
+- 标签更新接口支持sex字段
 
 ### 4.5 虚拟试衣模块
 
@@ -795,11 +899,17 @@ app/src/main/java/com/example/outfitchanges/
 ### 主要API接口
 
 - **用户认证**：`/api/auth/login`, `/api/auth/register`
-- **穿搭列表**：`/api/outfits`, `/api/discover/outfits`
+- **穿搭列表**：`/api/outfits`, `/api/discover/outfits?season=...&weather=...&sex=...`（支持性别筛选参数）
 - **收藏管理**：`/api/outfits/{id}/favorite`
 - **天气查询**：和风天气API
-- **图片上传**：`/api/outfits/create`
+- **图片上传**：`POST /api/outfits`（multipart/form-data，支持modified_tags包含sex字段）
+- **更新穿搭**：`PUT /api/outfits/{id}`（支持tags中包含sex字段）
 - **虚拟试衣**：`/api/virtual-tryon/submit`
+
+**API筛选参数说明**：
+- `sex`：性别筛选，支持 `male`（男）、`female`（女）、`unisex`（中性），可多个值用逗号分隔
+- 游客模式：调用 `/api/discover/outfits` 时不传token（使用X-Skip-Auth header）
+- 登录用户：调用 `/api/discover/outfits` 时自动携带token进行认证
 
 ---
 
